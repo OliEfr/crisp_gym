@@ -241,7 +241,7 @@ def main():
 
                     recording_manager.record_episode(
                         data_fn=policy.make_data_fn(),
-                        task="Pick up the lego block.",
+                        task="Pick up the small lego block and stack it on top of the other bigger lego block.",
                         on_start=on_start,
                         on_end=on_end,
                     )

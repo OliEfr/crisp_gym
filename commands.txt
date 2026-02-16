@@ -1,0 +1,99 @@
+Deployment in crisp_gym - training in Lerobot:
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/lerobot/outputs/train/2026-02-10/15-42-24_smolvla_stack_v6/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left \
+  --repo-id maxchr/stack_v6_depl_01 \
+  --robot-type franka
+
+  with trainiing ing crisp_gym:
+
+  pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/train/2026-02-13/15-39-11_smolvla_lego_stack_with_lang_30k/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left \
+  --repo-id maxchr/stack_v6_lang_depl_01 \
+  --robot-type franka
+
+
+Training command:
+
+
+  lerobot-train \
+  --policy.type=smolvla \
+  --policy.pretrained_path=lerobot/smolvla_base \
+  --policy.load_vlm_weights=true \
+  --policy.train_expert_only=true \
+  --policy.num_vlm_layers=16 \
+  --policy.n_action_steps=50 \
+  --policy.push_to_hub=false \
+  --dataset.repo_id=local/stack_v6 \
+  --dataset.root=/home/maxchr/datasets/stack_v6 \
+  --dataset.video_backend=pyav \
+  --dataset.use_pretrained_stats=true \               
+  --dataset.image_transforms.train_percentage=0.9 \
+  --steps=15000 \
+  --batch_size=32 \
+  --eval_freq=2500 \                                 
+  --optimizer.type=adamw \
+
+  --optimizer.betas=[0.9,0.95] \
+  --scheduler.type=cosine_decay_with_warmup \
+  --scheduler.num_warmup_steps=500 \
+  --scheduler.num_decay_steps=14500 \
+  --scheduler.peak_lr=1e-4 \
+  --scheduler.decay_lr=2.5e-6 \
+  --save_freq=1500 \
+  --log_freq=100 \
+  --wandb.enable=true \
+  --wandb.project=franka-stacking-v6 \
+  --job_name=smolvla_stack_v6_finetuned \
+  --use_policy_training_preset=false
+
+
+
+add instructionn to dataset file:
+
+# Run this in your terminal
+pixi run -e humble-lerobot python - <<'PY'
+import pandas as pd
+p = "/home/maxchr/datasets/stack_v6/meta/tasks.parquet"
+df = pd.read_parquet(p)
+df["instruction"] = "Pick up the small lego block and stack it on top of the other bigger lego block."
+df.to_parquet(p, index=False)
+print(df)
+PY
+
+
+
+new trainin command:
+
+lerobot-train \
+  --policy.type=smolvla \
+  --policy.pretrained_path=lerobot/smolvla_base \
+  --policy.load_vlm_weights=true \
+  --policy.train_expert_only=true \
+  --policy.num_vlm_layers=16 \
+  --policy.n_action_steps=50 \
+  --policy.push_to_hub=false \
+  --dataset.repo_id=local/stack_v6 \
+  --dataset.root=/home/maxchr/datasets/stack_v6 \
+  --dataset.video_backend=pyav \
+  --dataset.use_pretrained_stats=true \
+  --policy.input_features.instruction.type=LANGUAGE \
+  --policy.input_features.instruction.shape=[48] \
+  --policy.normalization_mapping.LANGUAGE=IDENTITY \
+  --steps=15000 \
+  --batch_size=32 \
+  --eval_freq=2500 \
+  --optimizer.type=adamw \
+  --optimizer.betas=[0.9,0.95] \
+  --scheduler.type=cosine_decay_with_warmup \
+  --scheduler.num_warmup_steps=500 \
+  --scheduler.num_decay_steps=14500 \
+  --scheduler.peak_lr=1e-4 \
+  --scheduler.decay_lr=2.5e-6 \
+  --save_freq=1500 \
+  --log_freq=100 \
+  --wandb.enable=true \
+  --wandb.project=franka-stacking-v6 \
+  --job_name=smolvla_stack_v6_finetuned_lang \
+  --use_policy_training_preset=false
