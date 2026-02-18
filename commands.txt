@@ -2,20 +2,81 @@ Deployment in crisp_gym - training in Lerobot:
 pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/lerobot/outputs/train/2026-02-10/15-42-24_smolvla_stack_v6/checkpoints/last/pretrained_model \
   --policy-config lerobot_policy \
   --env-namespace left \
-  --repo-id maxchr/stack_v6_depl_01 \
+  --repo-id max-chr/stack_v6_depl_01 \
   --robot-type franka
 
   with trainiing ing crisp_gym:
 
-  pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/train/2026-02-13/15-39-11_smolvla_lego_stack_with_lang_30k/checkpoints/last/pretrained_model \
-  --policy-config lerobot_policy \
-  --env-namespace left \
-  --repo-id maxchr/stack_v6_lang_depl_01 \
-  --robot-type franka
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/train/2026-02-13/15-48-01_smolvla_lego_stack_with_lang_30k/15-48-01_smolvla_lego_stack_with_lang_30k/checkpoints/last/pretrained_model \
+--policy-config lerobot_policy \
+--env-namespace left \
+--repo-id max-chr/stack_v6_lang_depl_02 \
+--robot-type franka
+
+pixi run -e humble-lerobot crisp-deploy-policy  --path  /home/maxchr/repos/crisp_gym/outputs/train/2026-02-17/10-08-02_smolvla_lego_stack_with_lang_30k/checkpoints/last/pretrained_model \
+--policy-config lerobot_policy \
+--env-namespace left \
+--repo-id max-chr/stack_v6_nolang_depl_03 \
+--robot-type franka
+
+
+Record Human only episode with new script:
+pixi run -e humble-lerobot crisp-record-cameras-only \
+--repo-id max-chr/stack_v6_camera_only_01 \
+--camera-config left_stack_v6_like \
+--num-episodes 10 --fps 15 --push-to-hub
+
+
+Inspect recorded episodes:
+pixi run -e lerobot python -m lerobot.scripts.visualize_dataset --repo-id max-chr/stack_v6_camera_only_01  --episode-index 0
+pixi run -e humble-lerobot lerobot.scripts.visualize_dataset --repo-id max-chr/stack_v6_camera_only_01  --episode-index 0
+pixi run -e humble-lerobot visualize_dataset --repo-id max-chr/stack_v6_camera_only_01  --episode-index 0
+
+################### Dataset Viz (working) ##########################:
+
+# Recommended (robust): write an .rrd file, then open it in rerun
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_stackv6
+rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
+On my ownd dataset:
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6_camera_only_01 --root /home/maxchr/data/hf/lerobot/max-chr --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_01 
+rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
+
+/home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_01/
+
+# Optional: local live viewer (not headless-safe)
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode local
+
+# Why browser looked empty:
+# In rerun 0.26.x, serve_web_viewer hosts the web UI but is not a log sink by itself.
+# So opening http://127.0.0.1:9088 can show the landing page without your dataset stream.
+
+################### Updated Commands for distadn streaming vesion ##########################:
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode distant --web-port 9088
+Terminal B (viewer):
+open http://127.0.0.1:9088 in a browser 
+OR: rerun --connect rerun+http://127.0.0.1:9088/proxy
+
+
+Terminal A (producer):
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode distant --web-port 9088
+Terminal B (viewer):
+open http://127.0.0.1:9088 in a browser
+
+Note: in this lerobot version, `--ws-port` is declared but not used by `lerobot_dataset_viz.py`; `--mode distant` serves the web viewer via `--web-port`.
+
+
+
+ROS Commands to add new cameras:
+
+List topics: ros2 topic list | grep -E 'image|camera_info'
+Check type: ros2 topic type /your/camera/color/image_raw
+Confirm publishing rate: ros2 topic hz /your/camera/color/image_raw
+Inspect one message: ros2 topic echo /your/camera/color/image_raw --once
+
+
 
 
 Training command:
-
 
   lerobot-train \
   --policy.type=smolvla \
@@ -97,3 +158,4 @@ lerobot-train \
   --wandb.project=franka-stacking-v6 \
   --job_name=smolvla_stack_v6_finetuned_lang \
   --use_policy_training_preset=false
+

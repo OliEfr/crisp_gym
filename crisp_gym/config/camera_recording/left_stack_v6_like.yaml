@@ -1,0 +1,15 @@
+# Camera-only recording config matching left_stack_v6 camera topic structure.
+# Use with --camera-backend ros_topics (or auto).
+
+camera_configs:
+  - camera_name: primary
+    camera_frame: primary_link
+    resolution: [256, 256]
+    camera_color_image_topic: /right/right_down_third_person_camera/color/image_raw
+    camera_color_info_topic: /right/right_down_third_person_camera/color/camera_info
+
+  - camera_name: wrist
+    camera_frame: wrist_link
+    resolution: [256, 256]
+    camera_color_image_topic: left_wrist_camera/color/image_rect_raw
+    camera_color_info_topic: left_wrist_camera/color/camera_info

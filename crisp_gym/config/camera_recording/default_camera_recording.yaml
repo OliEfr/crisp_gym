@@ -1,0 +1,9 @@
+# Camera-only recording configuration using ROS-topic camera configs
+# (same structure as manipulator env camera_configs).
+
+camera_configs:
+  - camera_name: camera
+    camera_frame: wrist_link
+    resolution: [256, 256]
+    camera_color_image_topic: camera/wrist_camera/color/image_rect_raw
+    camera_color_info_topic: camera/wrist_camera/color/camera_info
