@@ -26,6 +26,12 @@ pixi run -e humble-lerobot crisp-record-cameras-only \
 --camera-config left_stack_v6_like \
 --num-episodes 2 --fps 15 --push-to-hub
 
+for new camera setup:
+pixi run -e humble-lerobot crisp-record-cameras-only 
+--repo-id max-chr/human_rec_base_camera_only_01  \
+--camera-config left_human_rec_base \
+--num-episodes 2 --fps 15 
+
 
 Inspect recorded episodes:
 pixi run -e lerobot python -m lerobot.scripts.visualize_dataset --repo-id max-chr/stack_v6_camera_only_01  --episode-index 0
@@ -41,6 +47,12 @@ rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
 # On my own dataset (local folder): ++
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6_camera_only_04 --root /home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_04 --episode-index 3 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_04
 rerun /tmp/lerobot_viz_camera_only_04/stack_v6_camera_only_04_episode_3.rrd
+
+# with adapted camera (one additional added):
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id human_rec_base_camera_only_01 --root /home/maxchr/data/hf/lerobot/max-chr/human_rec_base_camera_only_01 
+ --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camer
+a_only_hum_01
+rerun /tmp/lerobot_viz_camera_only_hum_01/human_rec_base_camera_only_01_episode_0.rrd 
 
 # Equivalent command using full repo id:
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id max-chr/stack_v6_camera_only_02 --root /home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_02 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_02

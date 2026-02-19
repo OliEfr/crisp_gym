@@ -1,6 +1,7 @@
-# Camera-only recording config
+# Camera-only recording config with an orbecc camera topic.
 # Use with --camera-backend ros_topics (or auto).
 
+camera_configs:
 camera_configs:
   - camera_name: primary
     camera_frame: primary_link
@@ -13,3 +14,9 @@ camera_configs:
     resolution: [256, 256]
     camera_color_image_topic: left_wrist_camera/color/image_rect_raw
     camera_color_info_topic: left_wrist_camera/color/camera_info
+
+  - camera_name: eagle_eye
+    camera_frame: eagle_eye_link
+    resolution: [256, 256]
+    camera_color_image_topic: /left/eagles_view_camera/color/image_raw
+    camera_color_info_topic: /left/eagles_view_camera/color/camera_info
