@@ -19,17 +19,15 @@ To add/remove cameras, edit a YAML under `config/camera_recording/`.
 """
 
 import argparse
-import csv
 import datetime
 import json
 import logging
-import select
-import sys
 import termios
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import rclpy
 import yaml
 from crisp_py.camera import Camera
@@ -121,7 +119,10 @@ def _ask_enable_success_labeling(cli_value: bool | None) -> bool:
 
 
 def _prompt_success_score() -> float:
-    """Prompt user for success score in [0.0, 1.0]."""
+    """Ask for a success score and keep asking until we get a valid value.
+
+    This is intentionally strict: only floats in [0.0, 1.0] are accepted.
+    """
     _drain_stdin()
 
     while True:
@@ -144,12 +145,11 @@ def _prompt_success_score() -> float:
 
 
 def _sanitize_score_candidate(response: str) -> str:
-    """Sanitize score input by removing leaked control chars from keyboard shortcuts.
+    """Clean score text in case control keys leak into stdin.
 
     The recording controls use keys like `r`, `s`, `d`, `q`. Depending on terminal
     timing, those keypresses can leak into stdin and become part of the next prompt input.
-    This keeps intended numeric input (e.g. "1", "0.0") while stripping leaked control
-    characters.
+    We keep intended numeric input (e.g. "1", "0.0") and strip those leaked controls.
     """
     stripped = response.strip()
     lowered = stripped.lower()
@@ -161,23 +161,15 @@ def _sanitize_score_candidate(response: str) -> str:
 
 
 def _drain_stdin() -> None:
-    """Drain pending stdin characters before prompting for score."""
-    if not sys.stdin.isatty():
-        return
+    """Flush pending keyboard input before score prompt.
 
+    This avoids the common case where a previous hotkey press is consumed as score input.
+    """
     try:
-        termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
-        return
+        termios.tcflush(0, termios.TCIFLUSH)
     except Exception:
-        pass
-
-    try:
-        while True:
-            ready, _, _ = select.select([sys.stdin], [], [], 0)
-            if not ready:
-                break
-            sys.stdin.read(1)
-    except Exception:
+        # Some environments do not expose a flushable stdin (e.g. non-interactive runs).
+        # In that case we simply continue; input validation still guards correctness.
         return
 
 
@@ -189,45 +181,38 @@ def _append_success_label(
     task: str,
     success_score: float,
 ) -> None:
-    """Append a success label row for one saved episode."""
-    write_header = not labels_file.exists()
+    """Append one episode-level success label to parquet metadata.
+
+    We keep this as a sidecar file under `meta/` so it stays easy to query
+    and does not interfere with LeRobot's core metadata lifecycle.
+    """
     labels_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(labels_file, "a", newline="") as file:
-        writer = csv.writer(file)
-        if write_header:
-            writer.writerow(
-                [
-                    "saved_order_index",
-                    "episode_index_estimate",
-                    "episode_count_after_save",
-                    "task",
-                    "success_score",
-                    "timestamp_utc",
-                ]
-            )
+    row = {
+        "saved_order_index": int(saved_order_index),
+        "episode_index_estimate": int(episode_index_estimate),
+        "episode_count_after_save": int(episode_count_after_save),
+        "task": str(task),
+        "success_score": float(success_score),
+        "is_success": bool(success_score >= 0.5),
+        "timestamp_utc": datetime.datetime.now(tz=datetime.UTC).isoformat(),
+    }
 
-        writer.writerow(
-            [
-                saved_order_index,
-                episode_index_estimate,
-                episode_count_after_save,
-                task,
-                success_score,
-                datetime.datetime.now(tz=datetime.UTC).isoformat(),
-            ]
-        )
+    if labels_file.exists():
+        labels_df = pd.read_parquet(labels_file)
+        labels_df = pd.concat([labels_df, pd.DataFrame([row])], ignore_index=True)
+    else:
+        labels_df = pd.DataFrame([row])
+
+    labels_df.to_parquet(labels_file, index=False)
 
 
-def _count_existing_label_rows(labels_file: Path) -> int:
-    """Count existing data rows in labels CSV (excluding header)."""
-    if not labels_file.exists():
-        return 0
+def _count_existing_labels(labels_file: Path) -> int:
+    """Return how many success labels already exist in parquet metadata."""
+    if labels_file.exists():
+        return int(len(pd.read_parquet(labels_file)))
 
-    with open(labels_file, "r", newline="") as file:
-        row_count = sum(1 for _ in csv.reader(file))
-
-    return max(0, row_count - 1)
+    return 0
 
 
 class CameraRig:
@@ -635,8 +620,8 @@ def main() -> None:
         with open(meta_dir / "crisp_meta.json", "w") as file:
             json.dump(camera_rig.get_metadata(), file, indent=4)
 
-        labels_file = meta_dir / "episode_success.csv"
-        saved_order_index = _count_existing_label_rows(labels_file)
+        labels_file = meta_dir / "episode_success.parquet"
+        saved_order_index = _count_existing_labels(labels_file)
         if manual_success_labeling:
             logger.info(
                 "Manual success labeling enabled. Scores will be written to %s",
@@ -650,9 +635,11 @@ def main() -> None:
 
         tasks = list(args.tasks)
 
+        # Keep action shape tied to dataset features so placeholder actions always match schema.
         action_shape = tuple(features.get("action", {}).get("shape", (1,)))
 
         def data_fn() -> tuple[dict[str, Any], np.ndarray]:
+            """Read one observation and return a schema-aligned placeholder action."""
             obs = camera_rig.read_observation()
             action = np.zeros(action_shape, dtype=np.float32)
             return obs, action
@@ -672,8 +659,11 @@ def main() -> None:
                     task=task,
                 )
 
+                # We only write a label if the episode actually got saved.
+                # This keeps labels aligned with real dataset episodes.
                 was_saved = recording_manager.episode_count > previous_episode_count
                 if was_saved:
+                    # Manual mode asks once per saved episode; auto mode writes 1.0 directly.
                     success_score = (
                         _prompt_success_score() if manual_success_labeling else 1.0
                     )
