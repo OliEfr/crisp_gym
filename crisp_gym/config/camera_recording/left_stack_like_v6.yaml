@@ -5,8 +5,8 @@ camera_configs:
   - camera_name: primary
     camera_frame: primary_link
     resolution: [256, 256]
-    camera_color_image_topic: /right/right_down_third_person_camera/color/image_raw
-    camera_color_info_topic: /right/right_down_third_person_camera/color/camera_info
+    camera_color_image_topic: /left/right_down_third_person_camera/color/image_raw
+    camera_color_info_topic: /left/right_down_third_person_camera/color/camera_info
 
   - camera_name: wrist
     camera_frame: wrist_link

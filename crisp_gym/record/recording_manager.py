@@ -36,6 +36,30 @@ logger = logging.getLogger(__name__)
 _ADD_FRAME_HAS_TASK = "task" in signature(LeRobotDataset.add_frame).parameters
 
 
+def _normalize_action_to_feature_shape(action: Action, features: dict[str, dict]) -> np.ndarray:
+    """Normalize action to match the configured LeRobot action feature shape.
+
+    Accepts scalar, list, or ndarray actions and returns a float32 ndarray with
+    the exact shape declared in features["action"]["shape"].
+    """
+    expected_shape = tuple(features.get("action", {}).get("shape", ()))
+    action_array = np.asarray(action, dtype=np.float32)
+
+    if expected_shape:
+        expected_size = int(np.prod(expected_shape))
+        if action_array.shape == expected_shape:
+            return action_array.astype(np.float32)
+        if action_array.size == expected_size:
+            return action_array.reshape(expected_shape).astype(np.float32)
+        raise ValueError(
+            f"Action shape {action_array.shape} cannot be reshaped to expected shape {expected_shape}."
+        )
+
+    if action_array.ndim == 0:
+        return action_array.reshape(1).astype(np.float32)
+    return action_array.astype(np.float32)
+
+
 class RecordingManager(ABC):
     """Base class for event listener to control episode recording."""
 
@@ -184,7 +208,9 @@ class RecordingManager(ABC):
                     logger.debug(f"Received frame with action: {action} and obs: {obs.keys()}")
 
                     # Build frame directly from observation using feature-based approach
-                    frame = {"action": action.astype(np.float32)}
+                    frame = {
+                        "action": _normalize_action_to_feature_shape(action, self.config.features)
+                    }
 
                     # Add all observation features that match our dataset features
                     for feature_name in self.config.features:

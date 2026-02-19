@@ -23,6 +23,9 @@ import csv
 import datetime
 import json
 import logging
+import select
+import sys
+import termios
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +48,10 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_PLACEHOLDER_ACTION_DIM = 7
+DEFAULT_PLACEHOLDER_STATE_DIM = 13
 
 
 def _list_camera_recording_configs() -> list[str]:
@@ -115,13 +122,17 @@ def _ask_enable_success_labeling(cli_value: bool | None) -> bool:
 
 def _prompt_success_score() -> float:
     """Prompt user for success score in [0.0, 1.0]."""
+    _drain_stdin()
+
     while True:
         response = prompt.prompt(
             "Enter success score for this saved episode (0.0 to 1.0)",
             default="1.0",
         )
+
+        candidate = _sanitize_score_candidate(response)
         try:
-            score = float(response)
+            score = float(candidate)
         except ValueError:
             logger.warning("Invalid number. Please enter a float between 0.0 and 1.0.")
             continue
@@ -130,6 +141,44 @@ def _prompt_success_score() -> float:
             return score
 
         logger.warning("Out of range. Success score must be between 0.0 and 1.0.")
+
+
+def _sanitize_score_candidate(response: str) -> str:
+    """Sanitize score input by removing leaked control chars from keyboard shortcuts.
+
+    The recording controls use keys like `r`, `s`, `d`, `q`. Depending on terminal
+    timing, those keypresses can leak into stdin and become part of the next prompt input.
+    This keeps intended numeric input (e.g. "1", "0.0") while stripping leaked control
+    characters.
+    """
+    stripped = response.strip()
+    lowered = stripped.lower()
+
+    cleaned = "".join(ch for ch in lowered if ch not in {"r", "s", "d", "q"})
+    if cleaned:
+        return cleaned
+    return lowered
+
+
+def _drain_stdin() -> None:
+    """Drain pending stdin characters before prompting for score."""
+    if not sys.stdin.isatty():
+        return
+
+    try:
+        termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
+        return
+    except Exception:
+        pass
+
+    try:
+        while True:
+            ready, _, _ = select.select([sys.stdin], [], [], 0)
+            if not ready:
+                break
+            sys.stdin.read(1)
+    except Exception:
+        return
 
 
 def _append_success_label(
@@ -336,18 +385,20 @@ class CameraRig:
         features: dict[str, dict[str, Any]] = {
             "observation.state.human_action": {
                 "dtype": "float32",
-                "shape": (1,),
-                "names": ["human_action"],
+                "shape": (DEFAULT_PLACEHOLDER_STATE_DIM,),
+                "names": [
+                    f"human_action_{i}" for i in range(DEFAULT_PLACEHOLDER_STATE_DIM)
+                ],
             },
             "observation.state": {
                 "dtype": "float32",
-                "shape": (1,),
-                "names": ["human_action"],
+                "shape": (DEFAULT_PLACEHOLDER_STATE_DIM,),
+                "names": [f"state_{i}" for i in range(DEFAULT_PLACEHOLDER_STATE_DIM)],
             },
             "action": {
                 "dtype": "float32",
-                "shape": (1,),
-                "names": ["human_action"],
+                "shape": (DEFAULT_PLACEHOLDER_ACTION_DIM,),
+                "names": [f"action_{i}" for i in range(DEFAULT_PLACEHOLDER_ACTION_DIM)],
             },
         }
 
@@ -380,7 +431,9 @@ class CameraRig:
     def read_observation(self) -> dict[str, Any]:
         """Read one multi-camera observation."""
         obs: dict[str, Any] = {
-            "observation.state.human_action": np.array([0.0], dtype=np.float32),
+            "observation.state.human_action": np.zeros(
+                (DEFAULT_PLACEHOLDER_STATE_DIM,), dtype=np.float32
+            ),
         }
 
         if self.backend == "ros_topics":
@@ -597,9 +650,11 @@ def main() -> None:
 
         tasks = list(args.tasks)
 
+        action_shape = tuple(features.get("action", {}).get("shape", (1,)))
+
         def data_fn() -> tuple[dict[str, Any], np.ndarray]:
             obs = camera_rig.read_observation()
-            action = np.array([0.0], dtype=np.float32)
+            action = np.zeros(action_shape, dtype=np.float32)
             return obs, action
 
         with recording_manager:

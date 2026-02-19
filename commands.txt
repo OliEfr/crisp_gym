@@ -22,9 +22,9 @@ pixi run -e humble-lerobot crisp-deploy-policy  --path  /home/maxchr/repos/crisp
 
 Record Human only episode with new script:
 pixi run -e humble-lerobot crisp-record-cameras-only \
---repo-id max-chr/stack_v6_camera_only_01 \
+--repo-id max-chr/stack_v6_camera_only_04 \
 --camera-config left_stack_v6_like \
---num-episodes 10 --fps 15 --push-to-hub
+--num-episodes 2 --fps 15 --push-to-hub
 
 
 Inspect recorded episodes:
@@ -37,11 +37,13 @@ pixi run -e humble-lerobot visualize_dataset --repo-id max-chr/stack_v6_camera_o
 # Recommended (robust): write an .rrd file, then open it in rerun
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_stackv6
 rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
-On my ownd dataset:
-python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6_camera_only_01 --root /home/maxchr/data/hf/lerobot/max-chr --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_01 
-rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
 
-/home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_01/
+# On my own dataset (local folder): ++
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6_camera_only_04 --root /home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_04 --episode-index 3 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_04
+rerun /tmp/lerobot_viz_camera_only_04/stack_v6_camera_only_04_episode_3.rrd
+
+# Equivalent command using full repo id:
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id max-chr/stack_v6_camera_only_02 --root /home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_02 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_02
 
 # Optional: local live viewer (not headless-safe)
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode local
@@ -73,6 +75,13 @@ Check type: ros2 topic type /your/camera/color/image_raw
 Confirm publishing rate: ros2 topic hz /your/camera/color/image_raw
 Inspect one message: ros2 topic echo /your/camera/color/image_raw --once
 
+
+## Visualize Cameras on ROS right now:
+ros2 run rqt_image_view rqt_image_view
+
+For the Wrist View: Select: /left/left_wrist_camera/color/image_rect_raw
+
+For the Third-Person View: Select /right/right_down_third_person_camera/color/image_raw
 
 
 
@@ -158,4 +167,29 @@ lerobot-train \
   --wandb.project=franka-stacking-v6 \
   --job_name=smolvla_stack_v6_finetuned_lang \
   --use_policy_training_preset=false
+
+
+
+fix in lerobot datse viz:
+            if ACTION in batch:
+                action = batch[ACTION][i]
+                if isinstance(action, torch.Tensor) and action.ndim == 0:
+                    rr.log(f"{ACTION}/0", rr.Scalars(action.item()))
+                else:
+                    for dim_idx, val in enumerate(action):
+                        rr.log(f"{ACTION}/{dim_idx}", rr.Scalars(val.item()))
+
+                                    # display each dimension of observed state space (e.g. agent position in joint space)
+         if OBS_STATE in batch:
+                                        state = batch[OBS_STATE][i]
+                                        if isinstance(state, torch.Tensor) and state.ndim == 0:
+                                            rr.log("state/0", rr.Scalars(state.item()))
+                                        else:
+                                            for dim_idx, val in enumerate(state):
+                                                rr.log(f"state/{dim_idx}", rr.Scalars(val.item()))
+
+
+
+
+
 
