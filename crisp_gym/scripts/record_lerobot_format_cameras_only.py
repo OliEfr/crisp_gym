@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PLACEHOLDER_ACTION_DIM = 7
 DEFAULT_PLACEHOLDER_STATE_DIM = 13
+DEFAULT_TASK_PLACEHOLDER = "Human demonstrates the task in front of the camera."
 
 
 def _list_camera_recording_configs() -> list[str]:
@@ -213,6 +214,34 @@ def _count_existing_labels(labels_file: Path) -> int:
         return int(len(pd.read_parquet(labels_file)))
 
     return 0
+
+
+def _clean_tasks(tasks: list[str]) -> list[str]:
+    """Normalize tasks by removing empty values and trimming whitespace."""
+    return [task.strip() for task in tasks if task and task.strip()]
+
+
+def _tasks_were_explicitly_provided(tasks: list[str]) -> bool:
+    """Return True if user provided explicit tasks (not only the placeholder default)."""
+    return not (len(tasks) == 1 and tasks[0] == DEFAULT_TASK_PLACEHOLDER)
+
+
+def _prompt_task_text(default_task: str) -> str:
+    """Prompt for one task description and return a non-empty task string."""
+    entered_task = prompt.prompt(
+        "Enter task description:",
+        default=default_task,
+    )
+    cleaned_entered_task = entered_task.strip()
+    return cleaned_entered_task or default_task
+
+
+def _resolve_episode_task(tasks: list[str]) -> str:
+    """Resolve task text for the current episode from an explicit task list."""
+    cleaned_tasks = _clean_tasks(tasks)
+    if not cleaned_tasks:
+        return DEFAULT_TASK_PLACEHOLDER
+    return cleaned_tasks[np.random.randint(0, len(cleaned_tasks))]
 
 
 class CameraRig:
@@ -482,7 +511,7 @@ def main() -> None:
         "--tasks",
         type=str,
         nargs="+",
-        default=["Human demonstrates the task in front of the camera."],
+        default=[DEFAULT_TASK_PLACEHOLDER],
         help="List of task descriptions to sample from per episode.",
     )
     parser.add_argument(
@@ -633,7 +662,24 @@ def main() -> None:
                 labels_file,
             )
 
-        tasks = list(args.tasks)
+        tasks = _clean_tasks(list(args.tasks))
+        prompt_task_each_episode = False
+        task_prompt_default = DEFAULT_TASK_PLACEHOLDER
+
+        if not _tasks_were_explicitly_provided(tasks):
+            initial_task = _prompt_task_text(default_task=DEFAULT_TASK_PLACEHOLDER)
+            task_prompt_default = initial_task
+
+            reuse_for_all = prompt.prompt(
+                "Use this task for all upcoming episodes in this recording?",
+                options=["yes", "no"],
+                default="yes",
+            )
+            if reuse_for_all == "yes":
+                tasks = [initial_task]
+            else:
+                prompt_task_each_episode = True
+                tasks = []
 
         # Keep action shape tied to dataset features so placeholder actions always match schema.
         action_shape = tuple(features.get("action", {}).get("shape", (1,)))
@@ -649,7 +695,10 @@ def main() -> None:
                 logger.info(
                     f"→ Episode {recording_manager.episode_count + 1} / {recording_manager.num_episodes}"
                 )
-                task = tasks[np.random.randint(0, len(tasks))] if tasks else "No task specified."
+                if prompt_task_each_episode:
+                    task = _prompt_task_text(default_task=task_prompt_default)
+                else:
+                    task = _resolve_episode_task(tasks)
                 logger.info(f"▷ Task: {task}")
 
                 previous_episode_count = recording_manager.episode_count

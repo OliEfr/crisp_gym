@@ -26,11 +26,22 @@ pixi run -e humble-lerobot crisp-record-cameras-only \
 --camera-config left_stack_v6_like \
 --num-episodes 2 --fps 15 --push-to-hub
 
-for new camera setup:
-pixi run -e humble-lerobot crisp-record-cameras-only 
+for new camera setups:
+pixi run -e humble-lerobot crisp-record-cameras-only \
 --repo-id max-chr/human_rec_base_camera_only_01  \
 --camera-config left_human_rec_base \
 --num-episodes 2 --fps 15 
+
+pixi run -e humble-lerobot crisp-record-cameras-only \
+--repo-id max-chr/human_rec_v1_0  \
+--camera-config human_rec_v1 \
+--num-episodes 2 --fps 30 --tasks "Pick the syringe from the plate and place it in the cup"
+
+"Grab the cup and place it in the basket"
+
+for generalisation later:
+"Pick the syringe from the plate and place it in the basket"
+"Grab the cup and place it on the plate"
 
 push to hub, when I forgot to push:
 hf upload max-chr/human_rec_base_camera_only_03 /home/maxchr/data/hf/lerobot/max-chr/human_rec_base_camera_only_03 . --repo-type dataset
@@ -43,6 +54,7 @@ pixi run -e humble-lerobot visualize_dataset --repo-id max-chr/stack_v6_camera_o
 
 ################### Dataset Viz (working) ##########################:
 
+!!!! needs to be run form the lerobot repo !!! (~/repos/lerobot$ source lerobot_env/bin/activate)
 # Recommended (robust): write an .rrd file, then open it in rerun
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id stack_v6 --root /home/maxchr/datasets/stack_v6 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_stackv6
 rerun /tmp/lerobot_viz_stackv6/stack_v6_episode_0.rrd
@@ -54,6 +66,10 @@ rerun /tmp/lerobot_viz_camera_only_04/stack_v6_camera_only_04_episode_3.rrd
 # with adapted camera (one additional added):
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id human_rec_base_camera_only_03 --root /home/maxchr/data/hf/lerobot/max-chr/human_rec_base_camera_only_03 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_hum_03
 rerun /tmp/lerobot_viz_camera_only_hum_03/human_rec_base_camera_only_03_episode_0.rrd 
+
+## for final human recoding setup
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id human_rec_v1_0 --root /home/maxchr/data/hf/lerobot/max-chr/human_rec_v1_0 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_human_rec_v1_0
+rerun /tmp/lerobot_viz_human_rec_v1_0/human_rec_v1_0_episode_0.rrd
 
 # Equivalent command using full repo id:
 python -m lerobot.scripts.lerobot_dataset_viz --repo-id max-chr/stack_v6_camera_only_02 --root /home/maxchr/data/hf/lerobot/max-chr/stack_v6_camera_only_02 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_camera_only_02
@@ -90,11 +106,17 @@ Inspect one message: ros2 topic echo /your/camera/color/image_raw --once
 
 
 ## Visualize Cameras on ROS right now:
+
+
 ros2 run rqt_image_view rqt_image_view
 
 For the Wrist View: Select: /left/left_wrist_camera/color/image_rect_raw
 
 For the Third-Person View: Select /right/right_down_third_person_camera/color/image_raw
+
+## visualize cameras for human dataset collection:
+
+rqt --perspective-file human_dataset_cameras.perspective
 
 
 

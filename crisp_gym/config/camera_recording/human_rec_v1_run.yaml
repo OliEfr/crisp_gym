@@ -1,0 +1,57 @@
+# Camera-only recording config with an orbecc camera topic.
+# Use with --camera-backend ros_topics (or auto).
+# resolution for smolval 512x512,for cosmos predict 832x 
+
+camera_configs:
+  - camera_name: chest_fpv
+    camera_frame: chest_fpv_link
+    resolution: [512,832]
+    camera_color_image_topic: /left/chest_fpv/color/image_rect_raw
+    camera_color_info_topic: /left/chest_fpv/color/camera_info
+
+  - camera_name: eagles_view
+    camera_frame: eagles_view_link
+    resolution: [512,832]
+    camera_color_image_topic: /left/eagles_view_camera/color/image_raw
+    camera_color_info_topic: /left/eagles_view_camera/color/camera_info
+
+  - camera_name: fpv
+    camera_frame: fpv_link
+    resolution: [512,832]
+    camera_color_image_topic: /left/fpv_camera/color/image_raw
+    camera_color_info_topic: /left/fpv_camera/color/camera_info
+
+  - camera_name: orth
+    camera_frame: orth_link
+    resolution: [512,832]
+    camera_color_image_topic: /left/orth_camera/color/image_rect_raw
+    camera_color_info_topic: /left/orth_camera/color/camera_info
+
+
+
+######experiments
+
+camera_configs:
+  - camera_name: chest_fpv
+    camera_frame: chest_fpv_link
+    resolution: [832,512]
+    camera_color_image_topic: /left/chest_fpv/color/image_rect_raw
+    camera_color_info_topic: /left/chest_fpv/color/camera_info
+
+  - camera_name: eagles_view
+    camera_frame: eagles_view_link
+    resolution: [832,512]
+    camera_color_image_topic: /left/eagles_view_camera/color/image_raw
+    camera_color_info_topic: /left/eagles_view_camera/color/camera_info
+
+  - camera_name: fpv
+    camera_frame: fpv_link
+    resolution: [832,512]
+    camera_color_image_topic: /left/fpv_camera/color/image_raw
+    camera_color_info_topic: /left/fpv_camera/color/camera_info
+
+  - camera_name: orth
+    camera_frame: orth_link
+    resolution: [832,512]
+    camera_color_image_topic: /left/orth_camera/color/image_rect_raw
+    camera_color_info_topic: /left/orth_camera/color/camera_info

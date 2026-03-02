@@ -2,7 +2,6 @@
 # Use with --camera-backend ros_topics (or auto).
 
 camera_configs:
-camera_configs:
   - camera_name: primary
     camera_frame: primary_link
     resolution: [256, 256]
