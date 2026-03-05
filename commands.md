@@ -62,23 +62,46 @@ pixi run -e humble-lerobot crisp-record-cameras-only \
   --num-episodes 2 --fps 15 
 ```
 
-### Push Dataset to HuggingFace Hub (if forgotten)
+#### Push Dataset to HuggingFace Hub (if forgotten)
 
 ```sh
-hf upload max-chr/human_rec_base_camera_only_03 /home/maxchr/data/hf/lerobot/max-chr/human_rec_base_camera_only_03 . --repo-type dataset
+hf upload max-chr/simple_tasks_human_rec_v0 /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --repo-type dataset
 ```
 
-#### Final Human Recording Setup (with explicit task)
+
+#### Push Dataset to LSY HuggingFace Hub
+
+```sh
+hf upload LSY-lab/simple_tasks_human_rec_v0 /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --repo-type dataset
+```
+
+
+#### Final Human Recording Setup for Cmaera-only (with explicit task)
 
 ```sh
 pixi run -e humble-lerobot crisp-record-cameras-only \
   --camera-config human_rec_v1 \
-  --num-episodes 2 --fps 15 \
+  --fps 15 \
   --repo-id max-chr/simple_tasks_human_rec_v0 \
-  --tasks "Pick the syringe from the plate and place it in the cup"
+  --tasks "Pick the syringe from the plate and place it in the cup" --resume  --num-episodes 100
 ```
 
-Alternative task prompts for generalization:
+```sh
+pixi run -e humble-lerobot crisp-record-cameras-only \
+  --camera-config human_rec_v1 \
+  --fps 15 \
+  --repo-id max-chr/simple_tasks_human_rec_v0 \
+  --tasks "Pick the syringe from the table and place it on the plate" --resume --num-episodes 100
+```
+```sh
+pixi run -e humble-lerobot crisp-record-cameras-only \
+  --camera-config human_rec_v1 \
+ --fps 15 \
+  --repo-id max-chr/simple_tasks_human_rec_v0 \
+  --tasks "Pick up the cup and place it in the basket" --resume --num-episodes 48 
+```
+
+Task prompts for generalization:
 1. "Pick the syringe from the plate and place it in the cup"
 2. "Pick the syringe from the table and place it on the plate"
 3. "Pick up the cup and place it in the basket"
@@ -86,12 +109,44 @@ Alternative task prompts for generalization:
 Randomizations:
 45-50 episodes per Task
 Fine grained randomization blocks 
-always in every episode: placement of cup, plate, basket within 5-10cm radius (i.e. diagonally, swap positions of late and cup, multiple syringes in cup,..)
+always in every episode: placement of cup, plate, basket within 5-10cm radius, operator dress code (i.e. sleeve, type of sleeve) (i.e. diagonally, swap positions of late and cup, multiple syringes in cup,..)
 - camera positions (slight angle and hight adjustments of 2 or more cameras)every 10 episodes
 
 Big randomization blocks:
 - lighting (light on, off, flashlight, blinds up)
 - background for table and wall (poster, blanket, blank wall, person standing there)
+
+### Final  Recording for TELEOP uon human camera setup (with explicit task)
+
+#### Start recording (keyboard mode):
+```sh
+pixi run -e humble-lerobot crisp-record-leader-follower \
+  --repo-id max-chr/simple_tasks_teleop_v0 \
+  --leader-config right_leader \
+  --leader-namespace right \
+  --follower-config left_human_rec_v1 \
+  --follower-namespace left \
+  --recording-manager-type keyboard \
+  --fps 15 \
+  --tasks "Pick up the cup and place it in the basket" \
+  --no-push-to-hub --resume \
+  --num-episodes 4
+```
+#### Start recording (franka button mode):
+
+```sh
+pixi run -e humble-lerobot crisp-record-leader-follower \
+  --repo-id max-chr/simple_tasks_teleop_v0 \
+  --leader-config right_leader \
+  --leader-namespace right \
+  --follower-config left_human_rec_v1 \
+  --follower-namespace left \
+  --recording-manager-type ros \
+  --fps 15 \
+  --tasks "Pick up the cup and place it in the basket" \
+  --no-push-to-hub --resume \
+  --num-episodes 4
+```
 
 
 ---
@@ -129,9 +184,24 @@ rerun /tmp/lerobot_viz_camera_only_hum_03/human_rec_base_camera_only_03_episode_
 #### Final Human Recording Setup Dataset Viz
 
 ```sh
-python -m lerobot.scripts.lerobot_dataset_viz --repo-id human_rec_v1_2 --root /home/maxchr/data/hf/lerobot/max-chr/human_rec_v1_2 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_human_rec_v1_2
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id human_rec_v1_2 --root /home/maxchr/data/hf/lerobot/max-chr/human_rec_v1_2 --episode-index 1 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_human_rec_v1_2
 rerun /tmp/lerobot_viz_human_rec_v1_2/human_rec_v1_2_episode_0.rrd
 rerun /tmp/lerobot_viz_human_rec_v1_1/human_rec_v1_1_episode_0.rrd
+```
+##### for our datatset simple_tasks_human_rec_v0
+
+```sh
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_human_rec_v0 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_human_rec_v0 --episode-index 0 
+rerun /tmp/lerobot_viz_simple_tasks_human_rec_v0/simple_tasks_human_rec_v0_episode_0.rrd
+
+```
+
+##### for our datatset simple_tasks_teleop_v0
+
+```sh
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_teleop_v0 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_teleop_v0 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_teleop_v0
+rerun /tmp/lerobot_viz_simple_tasks_teleop_v0/simple_tasks_teleop_v0_episode_0.rrd
+
 ```
 
 

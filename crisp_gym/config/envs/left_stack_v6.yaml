@@ -30,7 +30,7 @@ robot_config:
     - 2.06584183
     - 7.97426445e-01
 
-# IMPORTANT: This points to the new gripper file we will create in Step 2
+# IMPORTANT: This points to the new gripper file which is will created in Step 2
 gripper_config:
   from_yaml: "grippers/gripper_left_stack_v6.yaml"
 
@@ -38,8 +38,6 @@ camera_configs:
   - camera_name: "primary"
     camera_frame: "primary_link"
     resolution: [256, 256]
-    # Note: Your friend specifies /right/... for the primary camera.
-    # Ensure this matches your actual ROS topic list from earlier.
     camera_color_image_topic: "/left/right_down_third_person_camera/color/image_raw"
     camera_color_info_topic: "/left/right_down_third_person_camera/color/camera_info"
   - camera_name: "wrist"

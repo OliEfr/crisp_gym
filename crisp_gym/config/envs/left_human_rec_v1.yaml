@@ -1,0 +1,69 @@
+
+# crisp_gym/config/envs/my_stacking_env.yaml
+
+gripper_mode: "absolute_continuous"
+
+orientation_representation: angle_axis
+
+cartesian_control_param_config: null
+joint_control_param_config: null
+
+observations_to_include_to_state:
+  - observation.state.cartesian
+  - observation.state.gripper
+  - observation.state.target
+
+# No extra sensors for the small policy
+sensor_configs: []
+
+min_z: 0.04
+
+robot_config:
+  robot_type: "franka"
+  time_to_home: 2.0
+  publish_frequency: 50.0
+  home_config:
+    - -1.73960110e-02
+    - 9.55319758e-02
+    - 8.09703053e-04
+    - -1.94272034
+    - -4.01435784e-03
+    - 2.06584183
+    - 7.97426445e-01
+
+# IMPORTANT: This points to the gripper config used for this setup.
+gripper_config:
+  from_yaml: "grippers/gripper_left_stack_v6.yaml"
+
+camera_configs:
+  - camera_name: person_view_3rd_1st
+    camera_frame: person_view_3rd_1st_link
+    resolution: [521,840]
+    camera_color_image_topic: /left/person_view_3rd_1st/color/image_rect_raw
+    camera_color_info_topic: /left/person_view_3rd_1st/color/camera_info
+
+  - camera_name: eagles_view
+    camera_frame: eagles_view_link
+    resolution: [520,840]
+    camera_color_image_topic: /left/eagles_view_camera/color/image_raw
+    camera_color_info_topic: /left/eagles_view_camera/color/camera_info
+
+  - camera_name: fpv
+    camera_frame: fpv_link
+    resolution: [520,840]
+    camera_color_image_topic: /left/fpv_camera/color/image_raw
+    camera_color_info_topic: /left/fpv_camera/color/camera_info
+
+  - camera_name: orth
+    camera_frame: orth_link
+    resolution: [520,840]
+    camera_color_image_topic: /left/orth_camera/color/image_rect_raw
+    camera_color_info_topic: /left/orth_camera/color/camera_info
+
+  - camera_name: "wrist"
+    camera_frame: "wrist_link"
+    resolution: [256, 256]
+    camera_color_image_topic: "left_wrist_camera/color/image_rect_raw"
+    camera_color_info_topic: "left_wrist_camera/color/camera_info"
+
+control_frequency: 30.0
