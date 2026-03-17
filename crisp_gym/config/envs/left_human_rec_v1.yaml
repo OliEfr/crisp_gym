@@ -16,7 +16,7 @@ observations_to_include_to_state:
 # No extra sensors for the small policy
 sensor_configs: []
 
-min_z: 0.04
+min_z: 0.02
 
 robot_config:
   robot_type: "franka"

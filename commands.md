@@ -75,6 +75,10 @@ hf upload max-chr/simple_tasks_human_rec_v0 /home/maxchr/data/hf/lerobot/max-chr
 hf upload LSY-lab/simple_tasks_human_rec_v0 /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --repo-type dataset
 ```
 
+```sh
+hf upload LSY-lab/simple_tasks_teleop_v1 /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_teleop_v1 --repo-type dataset
+```
+
 
 #### Final Human Recording Setup for Cmaera-only (with explicit task)
 
@@ -121,7 +125,7 @@ Big randomization blocks:
 #### Start recording (keyboard mode):
 ```sh
 pixi run -e humble-lerobot crisp-record-leader-follower \
-  --repo-id max-chr/simple_tasks_teleop_v0 \
+  --repo-id max-chr/simple_tasks_teleop_v1 \
   --leader-config right_leader \
   --leader-namespace right \
   --follower-config left_human_rec_v1 \
@@ -134,9 +138,21 @@ pixi run -e humble-lerobot crisp-record-leader-follower \
 ```
 #### Start recording (franka button mode):
 
+
+
+  **Franka Button Actions (End-Effector & ROS Episode Recorder):**
+
+  | Symbol | Position      | Action (Physical)     | ROS Command    |
+  |--------|---------------|-----------------------|----------------|
+  | ◯      | Bottom        | Record/transition     | record         |
+  | ✓      | Right (Check) | Save/finish episode   | save           |
+  | ✗      | Left (Cross)  | Delete/undo episode   | delete         |
+  | ↑      | Up            | Quit/exit recording   | exit           |
+
+
 ```sh
 pixi run -e humble-lerobot crisp-record-leader-follower \
-  --repo-id max-chr/simple_tasks_teleop_v0 \
+  --repo-id max-chr/simple_tasks_teleop_v1 \
   --leader-config right_leader \
   --leader-namespace right \
   --follower-config left_human_rec_v1 \
@@ -148,7 +164,30 @@ pixi run -e humble-lerobot crisp-record-leader-follower \
   --num-episodes 4
 ```
 
-
+```sh
+pixi run -e humble-lerobot crisp-record-leader-follower  \
+ --repo-id max-chr/simple_tasks_teleop_v1   --leader-config right_leader \
+ --leader-namespace right   --follower-config left_human_rec_v1   \
+ --follower-namespace left   --recording-manager-type ros   --fps 15  \
+ --tasks "Pick the syringe from the plate and place it in the cup"   --no-push-to-hub \
+ --resume   --num-episodes 16
+```
+```sh
+pixi run -e humble-lerobot crisp-record-leader-follower  \
+ --repo-id max-chr/simple_tasks_teleop_v1   --leader-config right_leader \
+ --leader-namespace right   --follower-config left_human_rec_v1   \
+ --follower-namespace left   --recording-manager-type ros   --fps 15  \
+ --tasks "Pick the syringe from the table and place it on the plate"   --no-push-to-hub \
+ --resume   --num-episodes 20
+```
+```sh
+pixi run -e humble-lerobot crisp-record-leader-follower  \
+ --repo-id max-chr/simple_tasks_teleop_v1   --leader-config right_leader \
+ --leader-namespace right   --follower-config left_human_rec_v1   \
+ --follower-namespace left   --recording-manager-type ros   --fps 15  \
+ --tasks "Pick up the cup and place it in the basket"   --no-push-to-hub \
+ --resume   --num-episodes 12
+```
 ---
 
 ## Dataset Inspection & Visualization
@@ -191,16 +230,16 @@ rerun /tmp/lerobot_viz_human_rec_v1_1/human_rec_v1_1_episode_0.rrd
 ##### for our datatset simple_tasks_human_rec_v0
 
 ```sh
-python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_human_rec_v0 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_human_rec_v0 --episode-index 0 
-rerun /tmp/lerobot_viz_simple_tasks_human_rec_v0/simple_tasks_human_rec_v0_episode_0.rrd
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_human_rec_v0 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_human_rec_v0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_human_rec_v0 --episode-index 1 
+rerun /tmp/lerobot_viz_simple_tasks_human_rec_v0/simple_tasks_human_rec_v0_episode_1.rrd
 
 ```
 
-##### for our datatset simple_tasks_teleop_v0
+##### for our datatset simple_tasks_teleop_v1
 
 ```sh
-python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_teleop_v0 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_teleop_v0 --episode-index 0 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_teleop_v0
-rerun /tmp/lerobot_viz_simple_tasks_teleop_v0/simple_tasks_teleop_v0_episode_0.rrd
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id simple_tasks_teleop_v1 --root /home/maxchr/data/hf/lerobot/max-chr/simple_tasks_teleop_v1 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_simple_tasks_teleop_v1 --episode-index 122 
+rerun /tmp/lerobot_viz_simple_tasks_teleop_v1/simple_tasks_teleop_v1_episode_122.rrd
 
 ```
 
@@ -234,7 +273,7 @@ ros2 run rqt_image_view rqt_image_view
 Human dataset camera perspective:
 
 ```sh
-rqt --perspective-file human_darqt --perspective-file human_dataset_cameras.perspectivetaset_cameras_2.perspective
+rqt  --perspective-file human_dataset_cameras_2.perspective
 ```
 
 ## ROS Camera Commands
