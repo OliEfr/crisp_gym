@@ -38,6 +38,49 @@ pixi run -e humble-lerobot crisp-deploy-policy  --path  /home/maxchr/repos/crisp
   --robot-type franka
 ```
 
+### Deploy smolvla with text input
+
+Deploy a trained policy from crisp_gym using the `crisp-deploy-policy` command.
+
+```sh
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-17/smolvla_teleopv1_4cams_run1_wonly_to90k/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left --env-config left_human_rec_v1 \
+  --repo-id max-chr/smolvla_test \
+  --robot-type franka \
+  --task "Pick the syringe from the plate and place it in the cup" \
+  --resume -- num-episodes 18 
+```
+
+### Deploy HLRP SmolVLA Shared (isolated env)
+
+Use the dedicated environment so other policies in `humble-lerobot` stay unaffected.
+(python path required to load other packages from starge 2 repo)
+
+```sh
+PYTHONPATH=/home/maxchr/repos/robot-learning-from-video/packages:$PYTHONPATH \
+pixi run -e humble-lerobot-lam crisp-deploy-policy \
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-15_14-28-13_stage3_local_teleop_stage1/runs/2026-03-15_14-28-13_stage3_local_teleop_stage1/lerobot/checkpoints/100000/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-config left_human_rec_v1 \
+  --env-namespace left \
+  --repo-id max-chr/hlrp_smolvla_shared_test \
+  --robot-type franka \
+  --task "Pick the syringe from the plate and place it in the cup"
+```
+
+Alternative with an interactive shell:
+
+```sh
+pixi shell -e humble-lerobot-lam
+export PYTHONPATH=/home/maxchr/repos/robot-learning-from-video/packages:$PYTHONPATH
+crisp-deploy-policy --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-15_14-28-13_stage3_local_teleop_stage1/runs/2026-03-15_14-28-13_stage3_local_teleop_stage1/lerobot/checkpoints/100000/pretrained_model --policy-config lerobot_policy --env-config left_human_rec_v1 --env-namespace left --repo-id max-chr/hlrp_smolvla_shared_test --robot-type franka --task "Pick the syringe from the plate and place it in the cup"
+```
+
+--task "Pick up the cup and place it in the basket"
+--task "Pick the syringe from the plate and place it in the cup"
+--task "Pick the syringe from the table and place it on the plate"
+
 ---
 
 ## Recording Commands
@@ -235,6 +278,15 @@ rerun /tmp/lerobot_viz_simple_tasks_human_rec_v0/simple_tasks_human_rec_v0_episo
 
 ```
 
+## visualizing smolvala depoyement
+
+```sh
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id smolvla_test --root /home/maxchr/data/hf/lerobot/max-chr/smolvla_test --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_smolvla_test --episode-index 0
+rerun /tmp/lerobot_viz_smolvla_test/smolvla_test_episode_0.rrd
+rerun /tmp/lerobot_viz_smolvla_test/max-chr_smolvla_test_episode_0.rrd
+
+```
+
 ##### for our datatset simple_tasks_teleop_v1
 
 ```sh
@@ -379,6 +431,75 @@ lerobot-train \
 
 ---
 
+## Ditflow depoyment commands 
+```bash
+pixi run -e humble-lerobot crisp-deploy-policy \
+--path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-17/04-33-18_2cam_third_person_orth_task_2_vanilla/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left \
+  --repo-id max-chr/ditflow_deploy_test_01 \
+  --robot-type franka \
+  --num-episodes 10 \
+  --no-push-to-hub  \
+  --resume
+
+  ```
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-13/14-13-29_2cam_fpv_orth_task_0_vanilla/checkpoints/050000/pretrained_model
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-15/09-13-10_2cam_fpv_orth_task_2_vanilla/checkpoints/025000/pretrained_model
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-15/23-42-26_2cam_fpv_orth_all_tasks_1hot_vanilla/checkpoints/050000/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-14/10-48-20_2cam_fpv_orth_task_2_vanilla/checkpoints/050000/pretrained_model
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-15/23-42-26_2cam_fpv_orth_all_tasks_1hot_vanilla/checkpoints/050000/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-16/15-28-21_2cam_fpv_eagles_view_task_0_vanilla/checkpoints/last/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-16/22-44-54_2cam_fpv_third_person_task_2_vanilla/checkpoints/last/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-17/04-33-18_2cam_third_person_orth_task_2_vanilla/checkpoints/last/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-17/23-35-16_1cam_fpv_task_2_vanilla/checkpoints/last/pretrained_model
+
+  --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-18/05-24-08_4cams_task2_vanilla/checkpoints/last/pretrained_model
+
+
+
+
+## Run antigravity controller to free robot 
+
+This Commnad (no input()), keeps controller alive with sleep, and need to be stopped with stop with Ctrl+C:
+
+```bash
+pixi run -e humble-lerobot python - <<'PY'
+import time, rclpy
+from crisp_gym.teleop.teleop_robot import TeleopRobot
+from crisp_gym.teleop.teleop_robot_config import make_leader_config
+
+cfg = make_leader_config("left_no_gripper", use_gripper=False, disable_gripper_torque=False)
+leader = TeleopRobot(cfg, namespace="left")
+leader.robot.wait_until_ready()
+leader.prepare_for_teleop(home=False, blocking=False)
+print("Anti-gravity active on LEFT. Move robot now. Press Ctrl+C to exit.")
+try:
+    while True:
+        time.sleep(1.0)
+except KeyboardInterrupt:
+    pass
+finally:
+    leader.robot.shutdown()
+    if rclpy.ok():
+        rclpy.shutdown()
+```
+
+```bash
+
+```
+
+Confirm controller state:
+
+```bash
+ros2 control list_controllers -c /left/controller_manager | grep cartesian_impedance_controller
+```
+
 ## Miscellaneous / Code Fixes
 
 ### Patch for Action and State Logging in lerobot_dataset_viz in lerobot repo, currently not needed anymore 
@@ -403,3 +524,4 @@ if OBS_STATE in batch:
         for dim_idx, val in enumerate(state):
             rr.log(f"state/{dim_idx}", rr.Scalars(val.item()))
 ```
+

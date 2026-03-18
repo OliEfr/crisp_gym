@@ -38,25 +38,25 @@ gripper_config:
 camera_configs:
   - camera_name: person_view_3rd_1st
     camera_frame: person_view_3rd_1st_link
-    resolution: [520,840]
+    resolution: [260,420]
     camera_color_image_topic: /left/person_view_3rd_1st/color/image_rect_raw
     camera_color_info_topic: /left/person_view_3rd_1st/color/camera_info
 
   - camera_name: eagles_view
     camera_frame: eagles_view_link
-    resolution: [520,840]
+    resolution: [260,420]
     camera_color_image_topic: /left/eagles_view_camera/color/image_raw
     camera_color_info_topic: /left/eagles_view_camera/color/camera_info
 
   - camera_name: fpv
     camera_frame: fpv_link
-    resolution: [520,840]
+    resolution: [260,420]
     camera_color_image_topic: /left/fpv_camera/color/image_raw
     camera_color_info_topic: /left/fpv_camera/color/camera_info
 
   - camera_name: orth
     camera_frame: orth_link
-    resolution: [520,840]
+    resolution: [260,420]
     camera_color_image_topic: /left/orth_camera/color/image_rect_raw
     camera_color_info_topic: /left/orth_camera/color/camera_info
 

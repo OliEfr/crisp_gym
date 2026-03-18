@@ -106,6 +106,12 @@ def main():
         default=False,
         help="Whether to evaluate the performance of the model after each episode.",
     )
+    parser.add_argument(
+        "--task",
+        type=str,
+        default="Finish the task.",
+        help="Task prompt passed to the policy via observation['task'] and used as episode task label.",
+    )
 
     args = parser.parse_args()
     logger = logging.getLogger(__name__)
@@ -186,6 +192,7 @@ def main():
     try:
         ctrl_type = "cartesian" if not args.joint_control else "joint"
         env = make_env(args.env_config, control_type=ctrl_type, namespace=args.env_namespace)
+        env.task = args.task
 
         # %% Prepare the dataset
         features = get_features(env)
@@ -219,6 +226,7 @@ def main():
         def on_start():
             """Hook function to be called when starting a new episode."""
             env.reset()
+            env.task = args.task
             policy.reset()
             evaluator.start_timer()
 
@@ -241,7 +249,7 @@ def main():
 
                     recording_manager.record_episode(
                         data_fn=policy.make_data_fn(),
-                        task="Pick up the small lego block and stack it on top of the other bigger lego block.",
+                        task=args.task,
                         on_start=on_start,
                         on_end=on_end,
                     )

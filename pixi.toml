@@ -31,6 +31,7 @@ libgl-devel = "*"
 dev = { features = ["dev"] }
 humble = { features = ["humble"] }
 humble-lerobot = { features = ["humble", "lerobot", "dev"] }
+humble-lerobot-lam = { features = ["humble", "lerobot-lam", "dev"] }
 lerobot = { features = ["lerobot"] }
 jazzy = { features = ["jazzy"] }
 jazzy-lerobot = { features = ["jazzy", "lerobot", "dev"] }
@@ -56,7 +57,19 @@ rerun-sdk = "=0.22.1"
 # lerobot = { path = "../lerobot/", editable = true }
 # === Local version ===
 lerobot = { path = "/home/maxchr/repos/lerobot/", editable = true }
+lerobot_policy_ditflow = { path = "/home/maxchr/repos/ditflow/lerobot_policy_ditflow", editable = true }
 transformers = "*"
+num2words = "*"
+
+[feature.lerobot-lam.dependencies]
+pynput = "*"
+rerun-sdk = "=0.22.1"
+
+[feature.lerobot-lam.pypi-dependencies]
+lerobot = { path = "/home/maxchr/repos/robot-learning-from-video/lerobot/", editable = true }
+lerobot_policy_hlrp = { path = "/home/maxchr/repos/robot-learning-from-video/lerobot_policy_hlrp/", editable = true }
+transformers = "*"
+omegaconf = "*"
 num2words = "*"
 
 [feature.humble]

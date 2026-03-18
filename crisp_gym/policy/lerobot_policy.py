@@ -30,6 +30,25 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _get_policy_type_from_train_config_json(pretrained_path: str) -> str:
+    """Read policy type directly from train_config.json.
+
+    This fallback is used when TrainPipelineConfig.from_pretrained() fails due to
+    schema mismatches between checkpoint and installed LeRobot version.
+    """
+    config_path = Path(pretrained_path) / "train_config.json"
+    with open(config_path, "r") as f:
+        cfg = json.load(f)
+
+    policy_cfg = cfg.get("policy", {})
+    policy_type = policy_cfg.get("type")
+    if not policy_type:
+        raise ValueError(
+            f"Could not determine policy type from {config_path}. Expected key policy.type."
+        )
+    return policy_type
+
+
 @register_policy("lerobot_policy")
 class LerobotPolicy(Policy):
     """A policy implementation that wraps a LeRobot policy for use in CRISP environments.
@@ -143,22 +162,35 @@ def inference_worker(
 
         logger.info(f"[Inference] Loading training config from {pretrained_path}...")
 
-        train_config = TrainPipelineConfig.from_pretrained(pretrained_path)
+        train_config: TrainPipelineConfig | None = None
+        policy_type: str | None = None
+        try:
+            train_config = TrainPipelineConfig.from_pretrained(pretrained_path)
 
-        _check_dataset_metadata(train_config, env, logger)
+            _check_dataset_metadata(train_config, env, logger)
 
-        logger.info("[Inference] Loaded training config.")
+            logger.info("[Inference] Loaded training config.")
+            logger.debug(f"[Inference] Train config: {train_config}")
 
-        logger.debug(f"[Inference] Train config: {train_config}")
-
-        if train_config.policy is None:
-            raise ValueError(
-                f"Policy configuration is missing in the pretrained path: {pretrained_path}. "
-                "Please ensure the policy is correctly configured."
+            if train_config.policy is None:
+                raise ValueError(
+                    f"Policy configuration is missing in the pretrained path: {pretrained_path}. "
+                    "Please ensure the policy is correctly configured."
+                )
+            policy_type = train_config.policy.type
+        except Exception as e:
+            logger.warning(
+                "[Inference] Failed to parse full TrainPipelineConfig (%s). "
+                "Falling back to reading policy.type from train_config.json.",
+                e,
+            )
+            policy_type = _get_policy_type_from_train_config_json(pretrained_path)
+            logger.warning(
+                "[Inference] Skipping dataset metadata compatibility check due to config schema mismatch."
             )
 
         logger.info("[Inference] Loading policy...")
-        policy_cls = get_policy_class(train_config.policy.type)
+        policy_cls = get_policy_class(policy_type)
         policy = policy_cls.from_pretrained(pretrained_path)
 
         for override_key, override_value in (overrides or {}).items():
