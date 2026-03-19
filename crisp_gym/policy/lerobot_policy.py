@@ -30,6 +30,24 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _ensure_task_ids_in_batch(
+    batch: dict[str, Any], task_id: int | None, device: torch.device
+) -> dict[str, Any]:
+    """Ensure observation.task_ids exists in a policy input batch.
+
+    Some policy preprocessor pipelines may drop unknown keys. For policies using
+    task one-hot conditioning, we enforce this key right before inference.
+    """
+    if task_id is None:
+        return batch
+    if "observation.task_ids" in batch:
+        return batch
+
+    batch = dict(batch)
+    batch["observation.task_ids"] = torch.tensor([[int(task_id)]], device=device, dtype=torch.long)
+    return batch
+
+
 def _get_policy_type_from_train_config_json(pretrained_path: str) -> str:
     """Read policy type directly from train_config.json.
 
@@ -63,6 +81,7 @@ class LerobotPolicy(Policy):
         pretrained_path: str,
         env: ManipulatorBaseEnv,
         overrides: dict | None = None,
+        task_id: int | None = None,
     ):
         """Initialize the policy.
 
@@ -74,6 +93,7 @@ class LerobotPolicy(Policy):
         self.parent_conn, self.child_conn = Pipe()
         self.env = env
         self.overrides = overrides if overrides is not None else {}
+        self.task_id = task_id
 
         self.inf_proc = Process(
             target=inference_worker,
@@ -82,6 +102,7 @@ class LerobotPolicy(Policy):
                 "pretrained_path": pretrained_path,
                 "env": env,
                 "overrides": self.overrides,
+                "task_id": self.task_id,
             },
             daemon=True,
         )
@@ -104,6 +125,8 @@ class LerobotPolicy(Policy):
             obs_raw: Observation = self.env.get_obs()
 
             obs_raw["observation.state"] = concatenate_state_features(obs_raw)
+            if self.task_id is not None:
+                obs_raw["observation.task_ids"] = np.array([int(self.task_id)], dtype=np.int64)
 
             self.parent_conn.send(obs_raw)
             action: Action = self.parent_conn.recv().squeeze(0).to("cpu").numpy()
@@ -135,6 +158,7 @@ def inference_worker(
     pretrained_path: str,
     env: ManipulatorBaseEnv,
     overrides: dict | None = None,
+    task_id: int | None = None,
 ):  # noqa: ANN001
     """Policy inference process: loads policy on GPU, receives observations via conn, returns actions, and exits on None.
 
@@ -210,9 +234,12 @@ def inference_worker(
 
         warmup_obs_raw = env.observation_space.sample()
         warmup_obs_raw["observation.state"] = concatenate_state_features(warmup_obs_raw)
+        if task_id is not None:
+            warmup_obs_raw["observation.task_ids"] = np.array([int(task_id)], dtype=np.int64)
         warmup_obs = numpy_obs_to_torch(warmup_obs_raw)
         if USE_LEROBOT_PROCESSORS:
             warmup_obs = preprocessor(warmup_obs)
+        warmup_obs = _ensure_task_ids_in_batch(warmup_obs, task_id, device)
 
         logger.info("[Inference] Warming up policy...")
         elapsed_list = []
@@ -252,9 +279,12 @@ def inference_worker(
                 continue
 
             with torch.inference_mode():
+                if task_id is not None and "observation.task_ids" not in obs_raw:
+                    obs_raw["observation.task_ids"] = np.array([int(task_id)], dtype=np.int64)
                 obs = numpy_obs_to_torch(obs_raw)
                 if USE_LEROBOT_PROCESSORS:
                     obs = preprocessor(obs)
+                obs = _ensure_task_ids_in_batch(obs, task_id, device)
                 action = policy.select_action(obs)
                 if USE_LEROBOT_PROCESSORS:
                     action = postprocessor(action)

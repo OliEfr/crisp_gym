@@ -45,11 +45,10 @@ Deploy a trained policy from crisp_gym using the `crisp-deploy-policy` command.
 ```sh
 pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-17/smolvla_teleopv1_4cams_run1_wonly_to90k/checkpoints/last/pretrained_model \
   --policy-config lerobot_policy \
-  --env-namespace left --env-config left_human_rec_v1 \
+  --env-namespace left \
   --repo-id max-chr/smolvla_test \
   --robot-type franka \
-  --task "Pick the syringe from the plate and place it in the cup" \
-  --resume -- num-episodes 18 
+  --task "Pick the syringe from the plate and place it in the cup"
 ```
 
 ### Deploy HLRP SmolVLA Shared (isolated env)
@@ -66,7 +65,8 @@ pixi run -e humble-lerobot-lam crisp-deploy-policy \
   --env-namespace left \
   --repo-id max-chr/hlrp_smolvla_shared_test \
   --robot-type franka \
-  --task "Pick the syringe from the plate and place it in the cup"
+  --task "Pick the syringe from the table and place it on the plate" \
+  --resume 
 ```
 
 Alternative with an interactive shell:
@@ -296,6 +296,13 @@ rerun /tmp/lerobot_viz_simple_tasks_teleop_v1/simple_tasks_teleop_v1_episode_122
 ```
 
 
+##### for ditflow deployment visualization
+
+```sh
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id ditflow_deploy_test_01 --root /home/maxchr/data/hf/lerobot/max-chr/ditflow_deploy_test_01 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_ditflow_deploy_test_01 --episode-index 0
+rerun /tmp/lerobot_viz_ditflow_deploy_test_01/ditflow_deploy_test_01_episode_0.rrd
+
+```
 #### Distant Streaming Version
 
 Producer (Terminal A):
@@ -434,14 +441,14 @@ lerobot-train \
 ## Ditflow depoyment commands 
 ```bash
 pixi run -e humble-lerobot crisp-deploy-policy \
---path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-17/04-33-18_2cam_third_person_orth_task_2_vanilla/checkpoints/last/pretrained_model \
+--path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-18/10-10-21_2cam_fpv_orth_task_2_resnet/checkpoints/last/pretrained_model \
   --policy-config lerobot_policy \
   --env-namespace left \
   --repo-id max-chr/ditflow_deploy_test_01 \
   --robot-type franka \
   --num-episodes 10 \
   --no-push-to-hub  \
-  --resume
+  --resume --task-id 2
 
   ```
   --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-13/14-13-29_2cam_fpv_orth_task_0_vanilla/checkpoints/050000/pretrained_model

@@ -322,6 +322,12 @@ def numpy_obs_to_torch(obs: Dict[str, Any]) -> Dict[str, Any]:
     for key, value in obs.items():
         if key.startswith("observation.state"):
             obs_torch[key] = torch.from_numpy(value).unsqueeze(0).to(device).float()
+        elif key.startswith("observation.task_ids"):
+            if isinstance(value, np.ndarray):
+                task_ids = value
+            else:
+                task_ids = np.array([value], dtype=np.int64)
+            obs_torch[key] = torch.from_numpy(task_ids).unsqueeze(0).to(device).long()
         elif key.startswith("task"):
             obs_torch[key] = value  # Keep task values as-is
         elif key.startswith("observation.images"):

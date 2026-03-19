@@ -112,6 +112,12 @@ def main():
         default="Finish the task.",
         help="Task prompt passed to the policy via observation['task'] and used as episode task label.",
     )
+    parser.add_argument(
+        "--task-id",
+        type=int,
+        default=None,
+        help="Optional integer task ID used by policies expecting observation.task_ids (e.g. task one-hot conditioning).",
+    )
 
     args = parser.parse_args()
     logger = logging.getLogger(__name__)
@@ -193,6 +199,7 @@ def main():
         ctrl_type = "cartesian" if not args.joint_control else "joint"
         env = make_env(args.env_config, control_type=ctrl_type, namespace=args.env_namespace)
         env.task = args.task
+        env.task_id = args.task_id
 
         # %% Prepare the dataset
         features = get_features(env)
@@ -216,6 +223,7 @@ def main():
             name_or_config_name=args.policy_config,
             pretrained_path=args.path,
             env=env,
+            task_id=args.task_id,
         )
 
         logger.info("Homing robot before starting with recording.")
@@ -227,6 +235,7 @@ def main():
             """Hook function to be called when starting a new episode."""
             env.reset()
             env.task = args.task
+            env.task_id = args.task_id
             policy.reset()
             evaluator.start_timer()
 
