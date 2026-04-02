@@ -31,22 +31,13 @@ robot_config:
     - 2.06584183
     - 7.97426445e-01
 
+
+
 # IMPORTANT: This points to the gripper config used for this setup.
 gripper_config:
   from_yaml: "grippers/gripper_left_stack_v6.yaml"
 
 camera_configs:
-  - camera_name: person_view_3rd_1st
-    camera_frame: person_view_3rd_1st_link
-    resolution: [260,420]
-    camera_color_image_topic: /left/person_view_3rd_1st/color/image_rect_raw
-    camera_color_info_topic: /left/person_view_3rd_1st/color/camera_info
-
-  - camera_name: eagles_view
-    camera_frame: eagles_view_link
-    resolution: [260,420]
-    camera_color_image_topic: /left/eagles_view_camera/color/image_raw
-    camera_color_info_topic: /left/eagles_view_camera/color/camera_info
 
   - camera_name: fpv
     camera_frame: fpv_link
@@ -60,10 +51,5 @@ camera_configs:
     camera_color_image_topic: /left/orth_camera/color/image_rect_raw
     camera_color_info_topic: /left/orth_camera/color/camera_info
 
-  - camera_name: "wrist"
-    camera_frame: "wrist_link"
-    resolution: [256, 256]
-    camera_color_image_topic: "left_wrist_camera/color/image_rect_raw"
-    camera_color_info_topic: "left_wrist_camera/color/camera_info"
 
 control_frequency: 30.0

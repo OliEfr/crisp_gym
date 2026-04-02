@@ -31,6 +31,34 @@ libgl-devel = "*"
 dev = { features = ["dev"] }
 humble = { features = ["humble"] }
 humble-lerobot = { features = ["humble", "lerobot", "dev"] }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+humble-lerobot-pi05 = { features = ["humble", "lerobot-pi05"] }
 humble-lerobot-lam = { features = ["humble", "lerobot-lam", "dev"] }
 lerobot = { features = ["lerobot"] }
 jazzy = { features = ["jazzy"] }
@@ -64,6 +92,15 @@ num2words = "*"
 [feature.lerobot-lam.dependencies]
 pynput = "*"
 rerun-sdk = "=0.22.1"
+
+[feature.lerobot-pi05.dependencies]
+pynput = "*"
+
+[feature.lerobot-pi05.pypi-dependencies]
+lerobot = { path = "/home/maxchr/repos/lerobot/", editable = true }
+lerobot_policy_ditflow = { path = "/home/maxchr/repos/ditflow/lerobot_policy_ditflow", editable = true }
+transformers = { git = "https://github.com/huggingface/transformers.git", rev = "fix/lerobot_openpi" }
+num2words = "*"
 
 [feature.lerobot-lam.pypi-dependencies]
 lerobot = { path = "/home/maxchr/repos/robot-learning-from-video/lerobot/", editable = true }
