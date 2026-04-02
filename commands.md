@@ -43,13 +43,42 @@ pixi run -e humble-lerobot crisp-deploy-policy  --path  /home/maxchr/repos/crisp
 Deploy a trained policy from crisp_gym using the `crisp-deploy-policy` command.
 
 ```sh
-pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-17/smolvla_teleopv1_4cams_run1_wonly_to90k/checkpoints/last/pretrained_model \
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-28/19-18-04_smolvla_2cams_fpv_wrist_low_lr_100k/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left --env-config left_human_rec_v1 \
+  --repo-id max-chr/smolvla_wrist_low_lr\
+  --robot-type franka \
+  --task "Pick the syringe from the table and place it on the plate"--resume  --num-episodes 20
+
+```
+
+
+--task "Pick up the cup and place it in the basket"
+--task "Pick the syringe from the plate and place it in the cup"
+--task "Pick the syringe from the table and place it on the plate"
+
+
+### Deploy spi05 on human teleop dataset
+Deploy a trained policy from crisp_gym using the `crisp-deploy-policy` command.
+
+```sh
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/pi05/last/pretrained_model \
   --policy-config lerobot_policy \
   --env-namespace left \
-  --repo-id max-chr/smolvla_test \
+  --repo-id max-chr/pi05_teleop_simple_tasks_test \
   --robot-type franka \
-  --task "Pick the syringe from the plate and place it in the cup"
+  --task "Pick the syringe from the plate and place it in the cup"  --num-episodes 20 --resume
 ```
+
+#### Bowl on plate task pi0.5
+```sh
+pixi run -e humble-lerobot crisp-deploy-policy  \
+--path /home/maxchr/repos/crisp_gym/outputs/pi05/last/pretrained_model    \
+--policy-config lerobot_policy   --env-namespace left   --repo-id max-chr/pi0_bowl_on_plate_simple_tasks_test   \
+--robot-type franka --env-config left_robot_env_yi   --task "put the bowl on the plate"  \
+--num-episodes 10 --resume
+```
+
 
 ### Deploy HLRP SmolVLA Shared (isolated env)
 
@@ -74,7 +103,8 @@ Alternative with an interactive shell:
 ```sh
 pixi shell -e humble-lerobot-lam
 export PYTHONPATH=/home/maxchr/repos/robot-learning-from-video/packages:$PYTHONPATH
-crisp-deploy-policy --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-15_14-28-13_stage3_local_teleop_stage1/runs/2026-03-15_14-28-13_stage3_local_teleop_stage1/lerobot/checkpoints/100000/pretrained_model --policy-config lerobot_policy --env-config left_human_rec_v1 --env-namespace left --repo-id max-chr/hlrp_smolvla_shared_test --robot-type franka --task "Pick the syringe from the plate and place it in the cup"
+crisp-deploy-policy --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-15_14-28-13_stage3_local_teleop_stage1/runs/2026-03-15_14-28-13_stage3_local_teleop_stage1/lerobot/checkpoints/100000/pretrained_model \
+--policy-config lerobot_policy --env-config left_human_rec_v1 --env-namespace left --repo-id max-chr/hlrp_smolvla_shared_test --robot-type franka --task "Pick the syringe from the plate and place it in the cup"
 ```
 
 --task "Pick up the cup and place it in the basket"
@@ -82,6 +112,20 @@ crisp-deploy-policy --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla
 --task "Pick the syringe from the table and place it on the plate"
 
 ---
+
+### Deploy smolvla with real continue learning dataset
+
+Deploy a trained policy from crisp_gym using the `crisp-deploy-policy` command.
+
+```sh
+pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_gym/outputs/policies/smolvla/2026-03-27/00-11-44_smolvla_cont_learning_real_data_lr5e5_full_3tasks/checkpoints/last/pretrained_model   --policy-config lerobot_policy   --env-namespace left   --repo-id max-chr/smolvla_real_data_cont_learing_3tasks_small_LR   --robot-type franka --env-config left_robot_env_yi   --task "put the bowl on the plate" --num-episodes 30 --resume
+
+```
+tasks:
+
+"put the bowl on the plate"
+"stack the orange bowl on the other bowls"
+"put the moka pot on the stove"
 
 ## Recording Commands
 
@@ -299,8 +343,8 @@ rerun /tmp/lerobot_viz_simple_tasks_teleop_v1/simple_tasks_teleop_v1_episode_122
 ##### for ditflow deployment visualization
 
 ```sh
-python -m lerobot.scripts.lerobot_dataset_viz --repo-id ditflow_deploy_test_01 --root /home/maxchr/data/hf/lerobot/max-chr/ditflow_deploy_test_01 --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/lerobot_viz_ditflow_deploy_test_01 --episode-index 0
-rerun /tmp/lerobot_viz_ditflow_deploy_test_01/ditflow_deploy_test_01_episode_0.rrd
+python -m lerobot.scripts.lerobot_dataset_viz --repo-id dit_2cam_fpv_orth_all_tasks_res_exp --root /home/maxchr/data/hf/lerobot/max-chr/dit_2cam_fpv_orth_all_tasks_res_exp --display-compressed-images 0 --mode local --save 1 --output-dir /tmp/dit_2cam_fpv_orth_all_tasks_res_exp --episode-index 0
+rerun /tmp/lerobot_viz_dit_2cam_fpv_orth_task_2_sepenc_fullres/dit_2cam_fpv_orth_task_2_sepenc_fullres_episode_0.rrd
 
 ```
 #### Distant Streaming Version
@@ -441,16 +485,45 @@ lerobot-train \
 ## Ditflow depoyment commands 
 ```bash
 pixi run -e humble-lerobot crisp-deploy-policy \
---path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-18/10-10-21_2cam_fpv_orth_task_2_resnet/checkpoints/last/pretrained_model \
+--path  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-30/03-16-07_2cam_fpv_orth_task_0_resize_exp_new_data/checkpoints/last/pretrained_model  \
   --policy-config lerobot_policy \
   --env-namespace left \
-  --repo-id max-chr/ditflow_deploy_test_01 \
-  --robot-type franka \
+  --repo-id max-chr/dit_2cam_fpv_eagles_view \
+  --robot-type franka --env-config left_human_rec_v1 \
   --num-episodes 10 \
   --no-push-to-hub  \
-  --resume --task-id 2
+  --task-id 2   --resume 
+
 
   ```
+
+  retrained --fullres 
+  ----------------------------------------------------------------------------------------------
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-24/17-32-01_2cam_fpv_wrist_task_2_sepenc_fullres/checkpoints/last/pretrained_model -- broken prbably becasue of camera input passing of wrist
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-26/00-19-42_2cam_fpv_orth_task_0_resize_exp/checkpoints/last/pretrained_model -- need to fix input resolution issue
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-26/00-19-42_2cam_fpv_orth_task_2_resize_exp/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-27/11-33-07_2cam_fpv_orth_task_2_sepenc_fullres/checkpoints/last/pretrained_model - just a turn tothe rright other than the others but no tendency to move after the cup
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-27/18-25-39_2cam_fpv_orth_all_tasks_res_exp/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-28/04-10-00_1cam_fpv_task_2_sepenc_highres/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-28/19-07-56_4cams_task2_res_exp_t2_batch_accum/checkpoints/last/pretrained_model
+  
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-29/01-51-03_2cam_fpv_eagles_view_task_2_resize_exp/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-29/10-43-06_2cam_third_person_orth_task_2_resize_exp/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-29/17-33-55_2cam_fpv_third_person_task_2_resize_exp/checkpoints/last/pretrained_model
+
+  /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-30/03-16-07_2cam_fpv_orth_task_0_resize_exp_new_data/checkpoints/last/pretrained_model --5k checkpoint only
+
+
+
+  original downsampled  
+  ----------------------------------------------------------------------------------------------
+
   --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-13/14-13-29_2cam_fpv_orth_task_0_vanilla/checkpoints/050000/pretrained_model
   --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-15/09-13-10_2cam_fpv_orth_task_2_vanilla/checkpoints/025000/pretrained_model
   --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-15/23-42-26_2cam_fpv_orth_all_tasks_1hot_vanilla/checkpoints/050000/pretrained_model
@@ -468,8 +541,36 @@ pixi run -e humble-lerobot crisp-deploy-policy \
 
   --path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-18/05-24-08_4cams_task2_vanilla/checkpoints/last/pretrained_model
 
+retrained
+  ----------------------------------------------------------------------------------------------
+/home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-19/18-05-55_2cam_fpv_orth_task_0_sepenc_highres/checkpoints/last/pretrained_model
+
+/home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-18/16-00-24_2cam_fpv_orth_task_2_vanilla/checkpoints/last/pretrained_model
+
+/home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-20/05-47-44_1cam_fpv_task_2_vanilla/checkpoints/last
+
+retrained --fullres 
+  ----------------------------------------------------------------------------------------------
 
 
+### Albaition wiht other dataset
+
+```bash
+pixi run -e humble-lerobot crisp-deploy-policy \
+--path /home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-26/23-52-21_2cam_bowl_mokka_all_tasks/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left \
+  --repo-id max-chr/ditflow_bowl_all_1-hot_all \
+  --robot-type franka --env-config left_robot_env_yi \
+  --num-episodes 30 \
+  --no-push-to-hub --task-id 1 \
+  --resume
+  ```
+
+
+/home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-24/14-03-30_2cam_bowl_mokka_all_tasks/checkpoints/last/pretrained_model
+
+/home/maxchr/repos/crisp_gym/outputs/policies/ditflow_policies/2026-03-23/22-55-20_2cam_bowl_on_plate_yi/last/pretrained_model 
 
 ## Run antigravity controller to free robot 
 
