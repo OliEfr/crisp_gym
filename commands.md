@@ -227,8 +227,23 @@ pixi run -e humble-lerobot crisp-record-leader-follower \
   --no-push-to-hub --resume \
   --num-episodes 4
 ```
-#### Start recording (franka button mode):
 
+##### Recording Oliver - test (keyboard mode):
+```sh
+pixi run -e kilted-lerobot crisp-record-leader-follower \
+  --repo-id max-chr/oliver_teleop_test \
+  --leader-config right_leader \
+  --leader-namespace right \
+  --follower-config left_robot_env_yi \
+  --follower-namespace left \
+  --recording-manager-type keyboard \
+  --fps 15 \
+  --tasks "Pick up the cup and place it in the basket" \
+  --no-push-to-hub --num-episodes 4 --resume \
+  
+```
+
+#### Start recording (franka button mode):
 
 
   **Franka Button Actions (End-Effector & ROS Episode Recorder):**

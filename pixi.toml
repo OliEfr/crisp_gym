@@ -33,33 +33,6 @@ libgl-devel = "*"
 dev = { features = ["py311", "dev"] }
 humble = { features = ["py311", "humble"] }
 humble-lerobot = { features = ["py311", "humble", "lerobot", "dev"] }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 humble-lerobot-pi05 = { features = ["py311", "humble", "lerobot-pi05"] }
 humble-lerobot-lam = { features = ["py311", "humble", "lerobot-lam", "dev"] }
 lerobot = { features = ["py311", "lerobot"] }
