@@ -72,11 +72,15 @@ pixi run -e humble-lerobot crisp-deploy-policy  --path /home/maxchr/repos/crisp_
 
 #### Bowl on plate task pi0.5
 ```sh
-pixi run -e humble-lerobot crisp-deploy-policy  \
---path /home/maxchr/repos/crisp_gym/outputs/pi05/last/pretrained_model    \
---policy-config lerobot_policy   --env-namespace left   --repo-id max-chr/pi0_bowl_on_plate_simple_tasks_test   \
---robot-type franka --env-config left_robot_env_yi   --task "put the bowl on the plate"  \
---num-episodes 10 --resume
+pixi run -e kilted-lerobot crisp-deploy-policy \
+  --path /home/maxchr/repos/crisp_gym/outputs/pi05/pi05_bowl_20260401_232730/checkpoints/checkpoints/last/pretrained_model \
+  --policy-config lerobot_policy \
+  --env-namespace left \
+  --repo-id max-chr/pi05_bowl_kilted_lerobot05_test \
+  --robot-type franka \
+  --env-config left_robot_env_yi \
+  --task "put the bowl on the plate" \
+  --num-episodes 10 --resume
 ```
 
 

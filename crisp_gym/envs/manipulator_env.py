@@ -25,6 +25,7 @@ while True:
 
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Any, List, Tuple
 
@@ -398,7 +399,17 @@ class ManipulatorBaseEnv(gym.Env):
         self.initialize()
 
         self.robot.reset_targets()
-        self.robot.wait_until_ready()
+        # Readiness topics can briefly disappear during controller transitions.
+        # Use a longer timeout and retry once to avoid flaky reset failures.
+        try:
+            self.robot.wait_until_ready(timeout=10)
+        except TimeoutError:
+            logger.warning(
+                "Robot not ready during reset; retrying wait_until_ready once.",
+                exc_info=True,
+            )
+            time.sleep(0.5)
+            self.robot.wait_until_ready(timeout=10)
         self.switch_to_default_controller()
 
         if self.gripper is not None:
