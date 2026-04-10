@@ -268,6 +268,12 @@ class ManipulatorEnvConfig(ABC):
                         else sensor_config
                     )
 
+        # allow reading control config from .yaml as string paths
+        for key in ["cartesian_control_param_config", "joint_control_param_config"]:
+            value = data.get(key)
+            if isinstance(value, str):
+                data[key] = Path(value)
+
         return cls(**data)
 
 
