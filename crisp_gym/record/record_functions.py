@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from crisp_gym.envs.manipulator_env import ManipulatorBaseEnv, ManipulatorCartesianEnv
     from crisp_gym.teleop.teleop_robot import TeleopRobot
     from crisp_gym.teleop.teleop_sensor_stream import TeleopStreamedPose
+    from crisp_gym.teleop.teleop_spacemouse import SpaceMouseTeleop
 
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,46 @@ def make_teleop_streamer_fn(env: ManipulatorCartesianEnv, leader: TeleopStreamed
         prev_pose = pose
 
         gripper = leader.gripper.value if leader.gripper is not None else 0.0
+
+        action_pose_vector = action_pose.to_array(env.config.orientation_representation)
+
+        action = np.concatenate(
+            [
+                action_pose_vector,
+                [gripper],
+            ]
+        )
+        obs, *_ = env.step(action, block=False)
+        return obs, action
+
+    return _fn
+
+
+def make_teleop_spacemouse_fn(
+    env: ManipulatorCartesianEnv, leader: SpaceMouseTeleop
+) -> Callable:
+    """Create a teleoperation function for a SpaceMouse leader.
+
+    Mirrors :func:`make_teleop_streamer_fn` but reads ``leader.last_gripper``
+    instead of the (buggy) ``leader.gripper.value`` path. SpaceMouse is a
+    delta source integrated into a synthetic absolute :class:`Pose` so the
+    pose-difference logic identical to the streamer works here.
+    """
+    prev_pose = leader.last_pose
+    first_step = True
+
+    def _fn() -> tuple:
+        nonlocal prev_pose, first_step
+        if first_step:
+            first_step = False
+            prev_pose = leader.last_pose
+            return None, None
+
+        pose = leader.last_pose
+        action_pose = pose - prev_pose
+        prev_pose = pose
+
+        gripper = leader.last_gripper
 
         action_pose_vector = action_pose.to_array(env.config.orientation_representation)
 

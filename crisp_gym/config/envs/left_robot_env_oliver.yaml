@@ -1,7 +1,7 @@
 gripper_mode: "absolute_continuous"
 
-cartesian_control_param_config: "/home/maxchr/repos/crisp_gym/crisp_gym/config/envs/clipped_cartisian_impedance_oliver.yaml"  
-joint_control_param_config: "/home/maxchr/repos/crisp_gym/crisp_gym/config/envs/joint_control_oliver.yaml"      
+cartesian_control_param_config: "/home/maxchr/repos/crisp_gym_oliver/crisp_gym/config/envs/clipped_cartisian_impedance_oliver.yaml"  
+joint_control_param_config: null # "/home/maxchr/repos/crisp_gym_oliver/crisp_gym/config/envs/joint_control_oliver.yaml"      
 
 robot_config:
   robot_type: "franka"

@@ -658,6 +658,10 @@ class ManipulatorCartesianEnv(ManipulatorBaseEnv):
         Returns:
             Tuple[dict, float, bool, bool, dict]: Observation, reward, terminated flag, truncated flag, and info dictionary.
         """
+        # lego simple v1 start
+        # action[:6] = action[:6] *  [1, 1, 1, 0, 0, 1]
+        # lego simple v1 end
+
         assert action.shape == self.action_space.shape, (
             f"Action shape {action.shape} does not match expected shape {self.action_space.shape}"
         )

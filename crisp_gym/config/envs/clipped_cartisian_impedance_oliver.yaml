@@ -1,38 +1,44 @@
-limit_error: true
-limit_torques: true
+# limit_error: true
+# limit_torques: true
+# 
+# max_delta_tau: 0.5
+# 
+# nullspace.stiffness: 5.0
+# 
+# stop_commands: false
+# 
+# 
+# # @TODO: below params dont work - check with Linus
 
-max_delta_tau: 0.5
 
-nullspace.stiffness: 5.0
+# task.d_pos_x: 150.0
+# task.d_pos_y: 150.0
+# task.d_pos_z: 150.0
+# task.d_rot_x: 15.0
+# task.d_rot_y: 15.0
+# task.d_rot_z: 15.0
 
-stop_commands: false
 
 
+# use_coriolis_compensation: true
+# use_friction: true
+# use_gravity_compensation: false
+# use_local_jacobian: true
+# use_operational_space: false
+# use_sim_time: false
 
-task.k_pos_x: 5000.0
-task.k_pos_y: 5000.0
-task.k_pos_z: 5000.0
-task.k_rot_x: 200.0
-task.k_rot_y: 200.0
-task.k_rot_z: 200.0
+# LEGO SIMPLE
+task.k_pos_x: 2000.0
+task.k_pos_y: 2000.0
+task.k_pos_z: 2000.0
+task.k_rot_x: 40.0
+task.k_rot_y: 40.0
+task.k_rot_z: 40.0
 
-task.d_pos_x: 150.0
-task.d_pos_y: 150.0
-task.d_pos_z: 150.0
-task.d_rot_x: 4.0
-task.d_rot_y: 4.0
-task.d_rot_z: 4.0
-
-task.error_clip.rx: 0.04
-task.error_clip.ry: 0.04
-task.error_clip.rz: 0.04
-task.error_clip.x: 0.003
-task.error_clip.y: 0.003
-task.error_clip.z: 0.003
-
-use_coriolis_compensation: true
-use_friction: true
-use_gravity_compensation: false
-use_local_jacobian: true
-use_operational_space: false
-use_sim_time: false
+task.error_clip.rx: 0.08
+task.error_clip.ry: 0.08
+task.error_clip.rz: 0.08
+task.error_clip.x: 0.006
+task.error_clip.y: 0.006
+task.error_clip.z: 0.006
+# LEGO END

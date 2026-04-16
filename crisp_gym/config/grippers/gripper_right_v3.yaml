@@ -1,6 +1,6 @@
 # crisp_gym/config/grippers/gripper_right_v3.yaml
-min_value: 1289.0
-max_value: 2069.0
+min_value: 1150
+max_value: 2050
 joint_state_topic: /right/gripper/dynamixel_motor/joint_states
 command_topic: /right/gripper/dynamixel_motor/command
 enable_torque_service: /right/gripper/dynamixel_motor/set_torque
