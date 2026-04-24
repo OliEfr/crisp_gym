@@ -82,6 +82,7 @@ class LerobotPolicy(Policy):
         env: ManipulatorBaseEnv,
         overrides: dict | None = None,
         task_id: int | None = None,
+        subfolder: str | None = None,
     ):
         """Initialize the policy.
 
@@ -89,18 +90,39 @@ class LerobotPolicy(Policy):
             pretrained_path (str): Path to the pretrained policy model.
             env (ManipulatorBaseEnv): The environment in which the policy will be applied.
             overrides (dict | None): Optional overrides for the policy configuration.
+            subfolder (str | None): Optional subfolder inside a HF Hub repo to load from.
+                When set and pretrained_path is not a local directory, the subfolder is
+                resolved to a local path via huggingface_hub.snapshot_download.
         """
+        if subfolder is not None and not Path(pretrained_path).exists():
+            from huggingface_hub import snapshot_download
+
+            logger.info(
+                f"Resolving HF subfolder '{subfolder}' of '{pretrained_path}' to local path."
+            )
+            local_root = snapshot_download(
+                repo_id=pretrained_path,
+                allow_patterns=[f"{subfolder}/*"],
+            )
+            pretrained_path = str(Path(local_root) / subfolder)
+            logger.info(f"Using resolved pretrained_path: {pretrained_path}")
+
         self.parent_conn, self.child_conn = Pipe()
         self.env = env
         self.overrides = overrides if overrides is not None else {}
         self.task_id = task_id
+
+        # Capture picklable snapshots for the worker (spawn start method requires pickling).
+        warmup_obs_sample = env.observation_space.sample()
+        env_metadata = env.get_metadata()
 
         self.inf_proc = Process(
             target=inference_worker,
             kwargs={
                 "conn": self.child_conn,
                 "pretrained_path": pretrained_path,
-                "env": env,
+                "warmup_obs_sample": warmup_obs_sample,
+                "env_metadata": env_metadata,
                 "overrides": self.overrides,
                 "task_id": self.task_id,
             },
@@ -156,7 +178,8 @@ class LerobotPolicy(Policy):
 def inference_worker(
     conn: Connection,
     pretrained_path: str,
-    env: ManipulatorBaseEnv,
+    warmup_obs_sample: dict,
+    env_metadata: dict,
     overrides: dict | None = None,
     task_id: int | None = None,
 ):  # noqa: ANN001
@@ -165,7 +188,8 @@ def inference_worker(
     Args:
         conn (Connection): The connection to the parent process for sending and receiving data.
         pretrained_path (str): Path to the pretrained policy model.
-        env (ManipulatorBaseEnv): The environment in which the policy will be applied.
+        warmup_obs_sample (dict): Picklable sample from env.observation_space used for warmup.
+        env_metadata (dict): Picklable snapshot of env.get_metadata() for dataset metadata checks.
         overrides (dict | None): Optional overrides for the policy configuration.
     """
     setup_logging()
@@ -191,7 +215,7 @@ def inference_worker(
         try:
             train_config = TrainPipelineConfig.from_pretrained(pretrained_path)
 
-            _check_dataset_metadata(train_config, env, logger)
+            _check_dataset_metadata(train_config, env_metadata, logger)
 
             logger.info("[Inference] Loaded training config.")
             logger.debug(f"[Inference] Train config: {train_config}")
@@ -232,7 +256,7 @@ def inference_worker(
         if USE_LEROBOT_PROCESSORS:
             preprocessor, postprocessor = make_pre_post_processors(policy_cfg=policy.config, pretrained_path=pretrained_path)
 
-        warmup_obs_raw = env.observation_space.sample()
+        warmup_obs_raw = dict(warmup_obs_sample)
         warmup_obs_raw["observation.state"] = concatenate_state_features(warmup_obs_raw)
         if task_id is not None:
             warmup_obs_raw["observation.task_ids"] = np.array([int(task_id)], dtype=np.int64)
@@ -282,12 +306,16 @@ def inference_worker(
                 if task_id is not None and "observation.task_ids" not in obs_raw:
                     obs_raw["observation.task_ids"] = np.array([int(task_id)], dtype=np.int64)
                 obs = numpy_obs_to_torch(obs_raw)
+                logger.info("[Inference] Starting inference...")
+                t0 = time.perf_counter()
                 if USE_LEROBOT_PROCESSORS:
                     obs = preprocessor(obs)
                 obs = _ensure_task_ids_in_batch(obs, task_id, device)
                 action = policy.select_action(obs)
                 if USE_LEROBOT_PROCESSORS:
                     action = postprocessor(action)
+                elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                logger.info(f"[Inference] Done in {elapsed_ms:.2f}ms")
 
             logger.debug(f"[Inference] Computed action: {action}")
             conn.send(action)
@@ -300,7 +328,7 @@ def inference_worker(
 
 def _check_dataset_metadata(
     train_config: TrainPipelineConfig,
-    env: ManipulatorBaseEnv,
+    env_metadata: dict,
     logger: logging.Logger,
     keys_to_skip: list[str] | None = None,
 ):
@@ -308,7 +336,7 @@ def _check_dataset_metadata(
 
     Args:
         train_config (TrainPipelineConfig): The training pipeline configuration.
-        env (ManipulatorBaseEnv): The environment to compare against.
+        env_metadata (dict): Snapshot of env.get_metadata() captured in the parent process.
         logger (logging.Logger): Logger for logging information.
         keys_to_skip (list[str] | None): List of metadata keys to skip during comparison.
     """
@@ -334,7 +362,6 @@ def _check_dataset_metadata(
             logger.info(
                 "[Inference] Found crisp_meta.json in dataset, comparing environment and policy configs..."
             )
-            env_metadata = env.get_metadata()
             with open(path_to_metadata, "r") as f:
                 dataset_metadata = json.load(f)
             for key, value in dataset_metadata.items():

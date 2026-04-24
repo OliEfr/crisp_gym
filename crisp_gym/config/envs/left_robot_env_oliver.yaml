@@ -41,4 +41,9 @@ sensor_configs:
 control_frequency: 15.0
 
 
+observations_to_include_to_state:
+  - observation.state.gripper
+  - observation.state.sensors_bota_ft_sensor
+
+
 

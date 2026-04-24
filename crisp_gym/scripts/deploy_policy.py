@@ -17,7 +17,14 @@ from crisp_gym.util.lerobot_features import get_features
 from crisp_gym.util.setup_logger import setup_logging
 
 
+import torch.multiprocessing as mp
+
 def main():
+
+    import multiprocessing as mp
+    mp.set_start_method("spawn", force=True)
+    print("Set multiprocessing start method to 'spawn'.")
+
     """Deploy a pretrained policy and record deployment data in Lerobot Format."""
     parser = argparse.ArgumentParser(
         description="Deploy a pretrained policy and record data in Lerobot Format"
@@ -117,6 +124,12 @@ def main():
         type=int,
         default=None,
         help="Optional integer task ID used by policies expecting observation.task_ids (e.g. task one-hot conditioning).",
+    )
+    parser.add_argument(
+        "--subfolder",
+        type=str,
+        default=None,
+        help="Subfolder inside the HF repo pointed to by --path (e.g. 'checkpoints/020000').",
     )
 
     args = parser.parse_args()
@@ -224,6 +237,7 @@ def main():
             pretrained_path=args.path,
             env=env,
             task_id=args.task_id,
+            subfolder=args.subfolder,
         )
 
         logger.info("Homing robot before starting with recording.")

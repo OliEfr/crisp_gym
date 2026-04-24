@@ -87,19 +87,20 @@ numpy = ">=2.0.0,<2.3.0"
 # lerobot = { path = "../lerobot/", editable = true }
 # === Local version ===
 lerobot = { path = "/home/maxchr/repos/lerobot/", editable = true }
-lerobot_policy_ditflow = { path = "/home/maxchr/repos/ditflow/lerobot_policy_ditflow", editable = true }
+lerobot_policy_ditflow = { path = "./lerobot_policy_ditflow", editable = true }
 transformers = "*"
 num2words = "*"
 
 [feature.lerobot-jazzy.pypi-dependencies]
 lerobot = { path = "/home/maxchr/repos/lerobot-fork/", editable = true }
-lerobot_policy_ditflow = { path = "/home/maxchr/repos/ditflow/lerobot_policy_ditflow", editable = true }
+lerobot_policy_ditflow = { path = "./lerobot_policy_ditflow", editable = true }
 transformers = "*"
 num2words = "*"
 
 [feature.lerobot-kilted.pypi-dependencies]
-lerobot = { path = "/home/maxchr/repos/lerobot-fork/", editable = true }
-transformers = "*"
+lerobot = { path = "/home/maxchr/repos/lerobot_realWorldDRL", editable = true }
+lerobot_policy_ditflow = { path = "./lerobot_policy_ditflow", editable = true }
+transformers = "==5.3.0"
 num2words = "*"
 
 [feature.lerobot-lam.dependencies]
@@ -111,7 +112,7 @@ pynput = "*"
 
 [feature.lerobot-pi05.pypi-dependencies]
 lerobot = { path = "/home/maxchr/repos/lerobot/", editable = true }
-lerobot_policy_ditflow = { path = "/home/maxchr/repos/ditflow/lerobot_policy_ditflow", editable = true }
+lerobot_policy_ditflow = { path = "./lerobot_policy_ditflow", editable = true }
 transformers = { git = "https://github.com/huggingface/transformers.git", rev = "fix/lerobot_openpi" }
 num2words = "*"
 
